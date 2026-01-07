@@ -1,0 +1,2494 @@
+{
+    "name": "Integration Supabase",
+    "flow": [
+        {
+            "id": 32,
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "parameters": {
+                "hook": 2553711,
+                "maxResults": 1
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": -4,
+                    "y": 9
+                },
+                "restore": {
+                    "parameters": {
+                        "hook": {
+                            "data": {
+                                "editable": "true"
+                            },
+                            "label": "My gateway-webhook webhook"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "hook",
+                        "type": "hook:gateway-webhook",
+                        "label": "Webhook",
+                        "required": true
+                    },
+                    {
+                        "name": "maxResults",
+                        "type": "number",
+                        "label": "Maximum number of results"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 4,
+            "module": "builtin:BasicRouter",
+            "version": 1,
+            "parameters": {
+                "else": 0
+            },
+            "mapper": null,
+            "metadata": {
+                "designer": {
+                    "x": 305,
+                    "y": 2
+                }
+            },
+            "routes": [
+                {
+                    "flow": [
+                        {
+                            "id": 15,
+                            "module": "google-drive:copyAFile",
+                            "version": 4,
+                            "parameters": {
+                                "__IMTCONN__": 4598435
+                            },
+                            "filter": {
+                                "name": "CON OBSERVACIONES",
+                                "conditions": []
+                            },
+                            "mapper": {
+                                "select": "list",
+                                "copy": "drive",
+                                "destination": "drive",
+                                "file": "/1QCc5GvmDe0xGWXA-s3SmnGUsjNKNpoqrMM-B9G_RPYU",
+                                "folderId": "/1smoyaensMKdjLClW-MKzmXkj35JMTLad"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 593,
+                                    "y": 184
+                                },
+                                "restore": {
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "label": "My Google Restricted connection (informesauditoriasb@gmail.com)",
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "google-restricted"
+                                            }
+                                        }
+                                    },
+                                    "expect": {
+                                        "select": {
+                                            "label": "Select from the list"
+                                        },
+                                        "copy": {
+                                            "label": "My Drive"
+                                        },
+                                        "destination": {
+                                            "label": "My Drive"
+                                        },
+                                        "file": {
+                                            "mode": "chose",
+                                            "path": [
+                                                "Plantilla Maestra - Informe SST V6"
+                                            ]
+                                        },
+                                        "folderId": {
+                                            "mode": "chose",
+                                            "path": [
+                                                "INFORMES AUDITORIAS"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google-restricted",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "select",
+                                        "type": "select",
+                                        "label": "Select the Method",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "map",
+                                                "list"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "name",
+                                        "type": "text",
+                                        "label": "Copied File Name"
+                                    },
+                                    {
+                                        "name": "copy",
+                                        "type": "select",
+                                        "label": "Original File's Drive",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "drive",
+                                                "share",
+                                                "team"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "destination",
+                                        "type": "select",
+                                        "label": "New Drive Location",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "drive",
+                                                "share",
+                                                "team"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "file",
+                                        "type": "file",
+                                        "label": "Original File ID",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "folderId",
+                                        "type": "folder",
+                                        "label": "New Folder Location",
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 10,
+                            "module": "gemini-ai:createACompletionGeminiPro",
+                            "version": 1,
+                            "parameters": {
+                                "__IMTCONN__": 4445927
+                            },
+                            "mapper": {
+                                "model": "gemini-flash-latest",
+                                "contents": [
+                                    {
+                                        "role": "user",
+                                        "parts": [
+                                            {
+                                                "type": "text",
+                                                "text": "Actúa como un consultor experto en Seguridad y Salud en el Trabajo (SST) en Perú. Tu tarea es generar 3 bloques de texto separados para un informe, basado únicamente en los datos de diagnóstico que te proporcionaré. Sé claro, profesional y directo.\n\n**DATOS DEL DIAGNÓSTICO:**\n- Empresa: {{32.empresa}}\n- Dirigido a: {{32.nombre_lead}}\n- Cargo: {{32.cargo_lead}}\n- N° de Trabajadores: {{32.numero_trabajadores}}\n- Total de Incumplimientos: {{32.total_incumplimientos}}\n- Severidad Máxima Detectada: {{32.severidad_maxima}}\n- Multa Potencial: {{32.monto_multa_soles}}\n- Detalle de Hallazgos (en formato JSON): {{32.resultado_completo_json.diagnostico.detalle_hallazgos}}\n\n**TAREA:**\nGenera 3 bloques de texto separados usando los siguientes títulos exactos. No añadas nada más antes o después.\n\n---BLOQUE_CONCLUSION---\n[Basado en la cantidad y severidad de los hallazgos, redacta aquí una conclusión concisa sobre el estado general del SGSST. Ejemplo: \"Basado en los 5 incumplimientos detectados, con un riesgo máximo 'Grave', el SGSST de la empresa presenta áreas críticas que requieren atención prioritaria para asegurar el cumplimiento normativo y proteger a los trabajadores.\"]\n\n---BLOQUE_ANALISIS---\n[Redacta aquí 1 o 2 párrafos analizando las implicaciones de los hallazgos más importantes. Si hay muchos, enfócate en los de mayor severidad. Ejemplo: \"El hallazgo más significativo es la ausencia de una Matriz IPERC, considerada una falta grave. Este documento es la columna vertebral de la gestión de riesgos, y su inexistencia impide identificar peligros y evaluar riesgos de forma sistemática, afectando directamente la selección de EPP y la planificación de capacitaciones efectivas.\"]\n\n---BLOQUE_PLAN_ACCION---\n[**ACCIÓN CRÍTICA E INELUDIBLE: Tu respuesta para este bloque debe seguir estricta e idénticamente el siguiente formato de lista numerada de 3 puntos. No generes más ni menos de tres. Esta regla anula cualquier otra consideración.** Si los hallazgos no son suficientes para 3 acciones específicas, es tu obligación completarla con acciones generales y relevantes de SST para Perú.\n\n1. [Texto detallado de la primera acción correctiva]\n2. [Texto detallado de la segunda acción correctiva]\n3. [Texto detallado de la tercera acción correctiva]]"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "system_instruction": {},
+                                "generationConfig": {
+                                    "temperature": "0.2",
+                                    "thinkingConfig": {},
+                                    "imageConfig": {}
+                                }
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 855,
+                                    "y": 154
+                                },
+                                "restore": {
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "label": "My Gemini AI connection",
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "gemini-ai-q9zyjp"
+                                            }
+                                        }
+                                    },
+                                    "expect": {
+                                        "model": {
+                                            "mode": "chose",
+                                            "label": "Gemini Flash Latest"
+                                        },
+                                        "contents": {
+                                            "mode": "chose",
+                                            "items": [
+                                                {
+                                                    "role": {
+                                                        "mode": "chose",
+                                                        "label": "User"
+                                                    },
+                                                    "parts": {
+                                                        "mode": "chose",
+                                                        "items": [
+                                                            {
+                                                                "type": {
+                                                                    "mode": "chose",
+                                                                    "label": "Text"
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        "system_instruction": {
+                                            "nested": {
+                                                "parts": {
+                                                    "mode": "chose"
+                                                }
+                                            }
+                                        },
+                                        "safetySettings": {
+                                            "mode": "chose"
+                                        },
+                                        "generationConfig": {
+                                            "nested": {
+                                                "stopSequences": {
+                                                    "mode": "chose"
+                                                },
+                                                "responseModalities": {
+                                                    "mode": "chose"
+                                                },
+                                                "thinkingConfig": {
+                                                    "nested": {
+                                                        "include_thoughts": {
+                                                            "mode": "chose"
+                                                        },
+                                                        "thinking_level": {
+                                                            "mode": "chose",
+                                                            "label": "Empty"
+                                                        }
+                                                    }
+                                                },
+                                                "mediaResolution": {
+                                                    "mode": "chose",
+                                                    "label": "Empty"
+                                                },
+                                                "imageConfig": {
+                                                    "nested": {
+                                                        "imageSize": {
+                                                            "mode": "chose",
+                                                            "label": "Empty"
+                                                        }
+                                                    }
+                                                },
+                                                "responseMimeType": {
+                                                    "mode": "chose",
+                                                    "label": "Empty"
+                                                }
+                                            }
+                                        },
+                                        "function_declarations_context": {
+                                            "mode": "chose"
+                                        },
+                                        "url_context": {
+                                            "mode": "chose"
+                                        },
+                                        "google_search_context": {
+                                            "mode": "chose"
+                                        },
+                                        "code_execution": {
+                                            "mode": "chose"
+                                        },
+                                        "google_maps_context": {
+                                            "mode": "chose"
+                                        },
+                                        "file_search_store_context": {
+                                            "mode": "chose"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:gemini-ai-q9zyjp",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "model",
+                                        "type": "select",
+                                        "label": "AI Model",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "contents",
+                                        "type": "array",
+                                        "label": "Messages",
+                                        "required": true,
+                                        "spec": [
+                                            {
+                                                "name": "role",
+                                                "type": "select",
+                                                "label": "Role",
+                                                "options": [
+                                                    {
+                                                        "label": "User",
+                                                        "value": "user"
+                                                    },
+                                                    {
+                                                        "label": "Model",
+                                                        "value": "model"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "name": "parts",
+                                                "spec": [
+                                                    {
+                                                        "name": "type",
+                                                        "type": "select",
+                                                        "label": "Message Type",
+                                                        "options": [
+                                                            {
+                                                                "label": "Text",
+                                                                "value": "text",
+                                                                "nested": [
+                                                                    {
+                                                                        "name": "text",
+                                                                        "type": "text",
+                                                                        "label": "Text",
+                                                                        "required": false
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "label": "File",
+                                                                "value": "file",
+                                                                "nested": [
+                                                                    {
+                                                                        "name": "file_data",
+                                                                        "spec": [
+                                                                            {
+                                                                                "name": "mime_type",
+                                                                                "type": "text",
+                                                                                "label": "Mime Type",
+                                                                                "required": false
+                                                                            },
+                                                                            {
+                                                                                "help": "You get this from the 'Upload a File' module.",
+                                                                                "name": "file_uri",
+                                                                                "type": "text",
+                                                                                "label": "File URI",
+                                                                                "required": false
+                                                                            }
+                                                                        ],
+                                                                        "type": "collection",
+                                                                        "label": "File Data",
+                                                                        "required": false
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "label": "Function Call",
+                                                                "value": "functionCall",
+                                                                "nested": [
+                                                                    {
+                                                                        "name": "functionCall",
+                                                                        "spec": [
+                                                                            {
+                                                                                "help": "The name of the function to call.",
+                                                                                "name": "name",
+                                                                                "type": "text",
+                                                                                "label": "Name",
+                                                                                "required": true,
+                                                                                "validate": {
+                                                                                    "max": 64
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "help": "The function parameters and values in JSON object format.",
+                                                                                "name": "args",
+                                                                                "type": "json",
+                                                                                "label": "Arguments"
+                                                                            },
+                                                                            {
+                                                                                "help": "The unique ID of the function call.",
+                                                                                "name": "id",
+                                                                                "type": "text",
+                                                                                "label": "Function Call ID"
+                                                                            }
+                                                                        ],
+                                                                        "type": "collection",
+                                                                        "label": "Function Call"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "label": "Function Response",
+                                                                "value": "functionResponse",
+                                                                "nested": [
+                                                                    {
+                                                                        "name": "functionResponse",
+                                                                        "spec": [
+                                                                            {
+                                                                                "help": "The name of the function to call.",
+                                                                                "name": "name",
+                                                                                "type": "text",
+                                                                                "label": "Name",
+                                                                                "required": true,
+                                                                                "validate": {
+                                                                                    "max": 64
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "help": "The function response in JSON object format.",
+                                                                                "name": "response",
+                                                                                "type": "json",
+                                                                                "label": "Response",
+                                                                                "required": true
+                                                                            }
+                                                                        ],
+                                                                        "type": "collection",
+                                                                        "label": "Function Response"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "name": "thoughtSignature",
+                                                        "type": "text",
+                                                        "label": "Thought Signature"
+                                                    }
+                                                ],
+                                                "type": "array",
+                                                "label": "Parts"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "system_instruction",
+                                        "type": "collection",
+                                        "label": "System Instructions",
+                                        "spec": [
+                                            {
+                                                "name": "parts",
+                                                "type": "array",
+                                                "label": "Prompts",
+                                                "spec": {
+                                                    "spec": [
+                                                        {
+                                                            "name": "text",
+                                                            "type": "text",
+                                                            "label": "Value"
+                                                        }
+                                                    ],
+                                                    "type": "collection",
+                                                    "label": "Prompt",
+                                                    "name": "value"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "safetySettings",
+                                        "type": "array",
+                                        "label": "Safety Settings",
+                                        "spec": [
+                                            {
+                                                "name": "category",
+                                                "type": "select",
+                                                "label": "Category",
+                                                "options": [
+                                                    {
+                                                        "label": "Harassment content",
+                                                        "value": "HARM_CATEGORY_HARASSMENT"
+                                                    },
+                                                    {
+                                                        "label": "Hate speech and content",
+                                                        "value": "HARM_CATEGORY_HATE_SPEECH"
+                                                    },
+                                                    {
+                                                        "label": "Sexually explicit content.",
+                                                        "value": "HARM_CATEGORY_SEXUALLY_EXPLICIT"
+                                                    },
+                                                    {
+                                                        "label": "Dangerous content:",
+                                                        "value": "HARM_CATEGORY_DANGEROUS_CONTENT"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "name": "threshold",
+                                                "type": "select",
+                                                "label": "Threshold",
+                                                "options": [
+                                                    {
+                                                        "label": "Block low and above.",
+                                                        "value": "BLOCK_LOW_AND_ABOVE"
+                                                    },
+                                                    {
+                                                        "label": "Block medium and above.",
+                                                        "value": "BLOCK_MEDIUM_AND_ABOVE"
+                                                    },
+                                                    {
+                                                        "label": "Block only high.",
+                                                        "value": "BLOCK_ONLY_HIGH"
+                                                    },
+                                                    {
+                                                        "label": "Block none.",
+                                                        "value": "BLOCK_NONE"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "generationConfig",
+                                        "type": "collection",
+                                        "label": "Generation configurations",
+                                        "spec": [
+                                            {
+                                                "name": "stopSequences",
+                                                "type": "array",
+                                                "label": "Stop Sequences",
+                                                "spec": {
+                                                    "type": "text",
+                                                    "label": "Stop Sequence",
+                                                    "name": "value"
+                                                }
+                                            },
+                                            {
+                                                "name": "responseModalities",
+                                                "type": "select",
+                                                "label": "Response Modalities",
+                                                "multiple": true,
+                                                "validate": {
+                                                    "enum": [
+                                                        "text",
+                                                        "image"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "name": "maxOutputTokens",
+                                                "type": "number",
+                                                "label": "Max Output Tokens"
+                                            },
+                                            {
+                                                "name": "temperature",
+                                                "type": "number",
+                                                "label": "Temperature",
+                                                "validate": {
+                                                    "max": 1,
+                                                    "min": 0
+                                                }
+                                            },
+                                            {
+                                                "name": "topP",
+                                                "type": "number",
+                                                "label": "Top P",
+                                                "validate": {
+                                                    "max": 1,
+                                                    "min": 0
+                                                }
+                                            },
+                                            {
+                                                "name": "topK",
+                                                "type": "number",
+                                                "label": "Top K"
+                                            },
+                                            {
+                                                "name": "thinkingConfig",
+                                                "type": "collection",
+                                                "label": "Thinking Config",
+                                                "spec": [
+                                                    {
+                                                        "name": "thinkingBudget",
+                                                        "type": "number",
+                                                        "label": "Thinking Budget"
+                                                    },
+                                                    {
+                                                        "name": "include_thoughts",
+                                                        "type": "boolean",
+                                                        "label": "Include Thoughts"
+                                                    },
+                                                    {
+                                                        "name": "thinking_level",
+                                                        "type": "select",
+                                                        "label": "Thinking Level",
+                                                        "validate": {
+                                                            "enum": [
+                                                                "low",
+                                                                "high"
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "name": "mediaResolution",
+                                                "type": "select",
+                                                "label": "Media Resolution",
+                                                "validate": {
+                                                    "enum": [
+                                                        "media_resolution_low",
+                                                        "media_resolution_medium",
+                                                        "media_resolution_high"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "name": "imageConfig",
+                                                "type": "collection",
+                                                "label": "Image Configuration",
+                                                "spec": [
+                                                    {
+                                                        "name": "imageSize",
+                                                        "type": "select",
+                                                        "label": "Image Size",
+                                                        "validate": {
+                                                            "enum": [
+                                                                "1K",
+                                                                "2K",
+                                                                "4K"
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "name": "responseMimeType",
+                                                "type": "select",
+                                                "label": "Response Format"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "tools",
+                                        "type": "any",
+                                        "label": "Tools"
+                                    },
+                                    {
+                                        "name": "tool_config",
+                                        "type": "any",
+                                        "label": "Tool Config"
+                                    },
+                                    {
+                                        "name": "function_declarations_context",
+                                        "type": "boolean",
+                                        "label": "Function Declarations Grounding"
+                                    },
+                                    {
+                                        "name": "url_context",
+                                        "type": "boolean",
+                                        "label": "URL Context"
+                                    },
+                                    {
+                                        "name": "google_search_context",
+                                        "type": "boolean",
+                                        "label": "Google Search Grounding"
+                                    },
+                                    {
+                                        "name": "code_execution",
+                                        "type": "boolean",
+                                        "label": "Code Execution"
+                                    },
+                                    {
+                                        "name": "google_maps_context",
+                                        "type": "boolean",
+                                        "label": "Google Maps Grounding"
+                                    },
+                                    {
+                                        "name": "file_search_store_context",
+                                        "type": "boolean",
+                                        "label": "File Search Store Context"
+                                    }
+                                ],
+                                "advanced": true
+                            }
+                        },
+                        {
+                            "id": 16,
+                            "module": "util:SetVariables",
+                            "version": 1,
+                            "parameters": {},
+                            "mapper": {
+                                "scope": "roundtrip",
+                                "variables": [
+                                    {
+                                        "name": "v_conclusion",
+                                        "value": "{{trim(replace(get(split(10.candidates[1].content.parts[1].text; \"---BLOQUE_ANALISIS---\"); 1); \"---BLOQUE_CONCLUSION---\"; \"\"))}}"
+                                    },
+                                    {
+                                        "name": "v_analisis",
+                                        "value": "{{trim(get(split(get(split(10.candidates[1].content.parts[1].text; \"---BLOQUE_ANALISIS---\"); 2); \"---BLOQUE_PLAN_ACCION---\"); 1))}}"
+                                    },
+                                    {
+                                        "name": "v_plan_de_accion",
+                                        "value": "{{join(split(trim(get(split(10.candidates[1].content.parts[1].text; \"---BLOQUE_PLAN_ACCION---\"); 2)); newline); newline + newline)}}"
+                                    }
+                                ]
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1133,
+                                    "y": 153
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "scope": {
+                                            "label": "One cycle"
+                                        },
+                                        "variables": {
+                                            "items": [
+                                                null,
+                                                null,
+                                                null
+                                            ]
+                                        }
+                                    }
+                                },
+                                "expect": [
+                                    {
+                                        "name": "variables",
+                                        "spec": [
+                                            {
+                                                "name": "name",
+                                                "type": "text",
+                                                "label": "Variable name",
+                                                "required": true
+                                            },
+                                            {
+                                                "name": "value",
+                                                "type": "any",
+                                                "label": "Variable value"
+                                            }
+                                        ],
+                                        "type": "array",
+                                        "label": "Variables"
+                                    },
+                                    {
+                                        "name": "scope",
+                                        "type": "select",
+                                        "label": "Variable lifetime",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "roundtrip",
+                                                "execution"
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "interface": [
+                                    {
+                                        "name": "v_conclusion",
+                                        "type": "any",
+                                        "label": "v_conclusion"
+                                    },
+                                    {
+                                        "name": "v_analisis",
+                                        "type": "any",
+                                        "label": "v_analisis"
+                                    },
+                                    {
+                                        "name": "v_plan_de_accion",
+                                        "type": "any",
+                                        "label": "v_plan_de_accion"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 11,
+                            "module": "google-docs:replaceATextInADocument",
+                            "version": 1,
+                            "parameters": {
+                                "__IMTCONN__": 4598443
+                            },
+                            "mapper": {
+                                "destination": "drive",
+                                "replaceText": [
+                                    {
+                                        "oldText": "nombre_empresa",
+                                        "newText": "{{32.empresa}}"
+                                    },
+                                    {
+                                        "oldText": "nombre_lead",
+                                        "newText": "{{32.nombre_lead}}"
+                                    },
+                                    {
+                                        "oldText": "fecha_diagnostico",
+                                        "newText": "{{32.created_at}}"
+                                    },
+                                    {
+                                        "oldText": "numero_trabajadores",
+                                        "newText": "{{32.numero_trabajadores}}"
+                                    },
+                                    {
+                                        "oldText": "total_incumplimientos",
+                                        "newText": "{{32.total_incumplimientos}}"
+                                    },
+                                    {
+                                        "oldText": "severidad_maxima",
+                                        "newText": "{{32.severidad_maxima}}"
+                                    },
+                                    {
+                                        "oldText": "monto_final_soles",
+                                        "newText": "{{32.monto_multa_soles}}"
+                                    },
+                                    {
+                                        "oldText": "cargo_lead",
+                                        "newText": "{{32.cargo_lead}}"
+                                    },
+                                    {
+                                        "oldText": "conclusion_ia",
+                                        "newText": "{{16.v_conclusion}}"
+                                    },
+                                    {
+                                        "oldText": "analisis_ia",
+                                        "newText": "{{16.v_analisis}}"
+                                    },
+                                    {
+                                        "oldText": "accion_01",
+                                        "newText": "{{16.v_plan_de_accion}}"
+                                    },
+                                    {
+                                        "oldText": "tipo_empresa",
+                                        "newText": "{{32.tipo_empresa}}"
+                                    }
+                                ],
+                                "document": "{{15.id}}"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1423,
+                                    "y": 155
+                                },
+                                "restore": {
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "label": "My Google connection (informesauditoriasb@gmail.com)",
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "google"
+                                            }
+                                        }
+                                    },
+                                    "expect": {
+                                        "destination": {
+                                            "label": "My Drive"
+                                        },
+                                        "replaceText": {
+                                            "mode": "chose",
+                                            "items": [
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                null
+                                            ]
+                                        },
+                                        "document": {
+                                            "mode": "edit",
+                                            "path": []
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "destination",
+                                        "type": "select",
+                                        "label": "Choose a Drive",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "drive",
+                                                "share",
+                                                "team"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "replaceText",
+                                        "type": "array",
+                                        "label": "Replace a Text",
+                                        "required": true,
+                                        "spec": {
+                                            "spec": [
+                                                {
+                                                    "name": "oldText",
+                                                    "type": "text",
+                                                    "label": "Old text to be replaced",
+                                                    "required": true
+                                                },
+                                                {
+                                                    "name": "newText",
+                                                    "type": "text",
+                                                    "label": "New text to be inserted"
+                                                }
+                                            ],
+                                            "type": "collection",
+                                            "label": "Replacement",
+                                            "name": "value"
+                                        }
+                                    },
+                                    {
+                                        "name": "document",
+                                        "type": "file",
+                                        "label": "Document ID"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 21,
+                            "module": "google-docs:exportADocument",
+                            "version": 1,
+                            "parameters": {
+                                "__IMTCONN__": 4598443
+                            },
+                            "mapper": {
+                                "document": "{{11.id}}",
+                                "mimeType": "application/pdf",
+                                "destination": "drive"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1704,
+                                    "y": 158
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "document": {
+                                            "mode": "edit",
+                                            "path": []
+                                        },
+                                        "mimeType": {
+                                            "mode": "chose",
+                                            "label": "PDF Document (.pdf)"
+                                        },
+                                        "destination": {
+                                            "label": "My Drive"
+                                        }
+                                    },
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "google"
+                                            },
+                                            "label": "My Google connection (informesauditoriasb@gmail.com)"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "destination",
+                                        "type": "select",
+                                        "label": "Choose a Drive",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "drive",
+                                                "share",
+                                                "team"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "mimeType",
+                                        "type": "select",
+                                        "label": "Type",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                "application/vnd.oasis.opendocument.text",
+                                                "application/rtf",
+                                                "application/pdf",
+                                                "text/plain",
+                                                "text/html",
+                                                "application/epub+zip"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "document",
+                                        "type": "file",
+                                        "label": "Document ID",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "destination",
+                                        "type": "select",
+                                        "label": "Choose a Drive",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "drive",
+                                                "share",
+                                                "team"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "mimeType",
+                                        "type": "select",
+                                        "label": "Type",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                "application/vnd.oasis.opendocument.text",
+                                                "application/rtf",
+                                                "application/pdf",
+                                                "text/plain",
+                                                "text/html",
+                                                "application/epub+zip"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "document",
+                                        "type": "file",
+                                        "label": "Document ID",
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 22,
+                            "module": "plumsail-documents:splitPdf",
+                            "version": 2,
+                            "parameters": {
+                                "__IMTCONN__": 4452367
+                            },
+                            "mapper": {
+                                "type": "ExtractPages",
+                                "filedata": "{{21.data}}",
+                                "filename": "{{21.filename}}",
+                                "extractRange": "2-*",
+                                "filenamePrefix": "Imforme SST - {{32.empresa}}"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 2044,
+                                    "y": 172
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "type": {
+                                            "mode": "chose",
+                                            "label": "Extract Pages"
+                                        }
+                                    },
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "plumsail-documents"
+                                            },
+                                            "label": "My PlumsailDocuments OAuth connection (sbauditoriasst@gmail.com)"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:plumsail-documents",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "filename",
+                                        "type": "filename",
+                                        "label": "Name",
+                                        "required": true,
+                                        "extension": [
+                                            "pdf"
+                                        ]
+                                    },
+                                    {
+                                        "name": "filedata",
+                                        "type": "buffer",
+                                        "label": "Data",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "type",
+                                        "type": "select",
+                                        "label": "Split Type",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "ExtractPages",
+                                                "IntoChunks",
+                                                "ByBookmarks"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "extractRange",
+                                        "type": "text",
+                                        "label": "Page or pages range",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "filenamePrefix",
+                                        "type": "text",
+                                        "label": "Filename Prefix"
+                                    },
+                                    {
+                                        "name": "password",
+                                        "type": "text",
+                                        "label": "Password"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 25,
+                            "module": "google-drive:uploadAFile",
+                            "version": 4,
+                            "parameters": {
+                                "__IMTCONN__": 4598435
+                            },
+                            "mapper": {},
+                            "metadata": {
+                                "designer": {
+                                    "x": 2286,
+                                    "y": 144
+                                },
+                                "restore": {
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "google-restricted"
+                                            },
+                                            "label": "My Google Restricted connection (informesauditoriasb@gmail.com)"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google-restricted",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 24,
+                            "module": "google-drive:getAFile",
+                            "version": 4,
+                            "parameters": {
+                                "__IMTCONN__": 4598435
+                            },
+                            "mapper": {},
+                            "metadata": {
+                                "designer": {
+                                    "x": 2576,
+                                    "y": 140
+                                },
+                                "restore": {
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "google-restricted"
+                                            },
+                                            "label": "My Google Restricted connection (informesauditoriasb@gmail.com)"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google-restricted",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 13,
+                            "module": "google-sheets:addRow",
+                            "version": 2,
+                            "parameters": {
+                                "__IMTCONN__": 4598443
+                            },
+                            "mapper": {
+                                "from": "drive",
+                                "mode": "select",
+                                "values": {
+                                    "0": "{{32.created_at}}",
+                                    "1": "{{32.empresa}}",
+                                    "2": "{{32.nombre_lead}}",
+                                    "3": "{{32.cargo_lead}}",
+                                    "4": "{{32.email_lead}}",
+                                    "5": "{{32.telefono_lead}}",
+                                    "6": "{{32.monto_multa_soles}}",
+                                    "7": "{{32.numero_trabajadores}}",
+                                    "8": "{{32.total_incumplimientos}}",
+                                    "9": "{{25.webViewLink}}"
+                                },
+                                "sheetId": "Hoja 1",
+                                "spreadsheetId": "/1JZWLrGCMHwtusvyvoxO2jfvLxxWO-JZOmYg0f1UDgIQ",
+                                "includesHeaders": true,
+                                "insertDataOption": "INSERT_ROWS",
+                                "valueInputOption": "USER_ENTERED",
+                                "insertUnformatted": false
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 2871,
+                                    "y": 134
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "from": {
+                                            "label": "My Drive"
+                                        },
+                                        "mode": {
+                                            "label": "Search by path"
+                                        },
+                                        "sheetId": {
+                                            "label": "Hoja 1"
+                                        },
+                                        "spreadsheetId": {
+                                            "path": [
+                                                "Registro de Diagnósticos SST"
+                                            ]
+                                        },
+                                        "includesHeaders": {
+                                            "label": "Yes",
+                                            "nested": [
+                                                {
+                                                    "name": "values",
+                                                    "spec": [
+                                                        {
+                                                            "name": "0",
+                                                            "type": "text",
+                                                            "label": "Fecha (A)"
+                                                        },
+                                                        {
+                                                            "name": "1",
+                                                            "type": "text",
+                                                            "label": "Empresa (B)"
+                                                        },
+                                                        {
+                                                            "name": "2",
+                                                            "type": "text",
+                                                            "label": "Contacto (C)"
+                                                        },
+                                                        {
+                                                            "name": "3",
+                                                            "type": "text",
+                                                            "label": "Email (D)"
+                                                        },
+                                                        {
+                                                            "name": "4",
+                                                            "type": "text",
+                                                            "label": "Multa Potencial (E)"
+                                                        },
+                                                        {
+                                                            "name": "5",
+                                                            "type": "text",
+                                                            "label": "Link al Informe (F)"
+                                                        },
+                                                        {
+                                                            "name": "6",
+                                                            "type": "text",
+                                                            "label": "(G)"
+                                                        },
+                                                        {
+                                                            "name": "7",
+                                                            "type": "text",
+                                                            "label": "(H)"
+                                                        },
+                                                        {
+                                                            "name": "8",
+                                                            "type": "text",
+                                                            "label": "(I)"
+                                                        },
+                                                        {
+                                                            "name": "9",
+                                                            "type": "text",
+                                                            "label": "(J)"
+                                                        },
+                                                        {
+                                                            "name": "10",
+                                                            "type": "text",
+                                                            "label": "(K)"
+                                                        },
+                                                        {
+                                                            "name": "11",
+                                                            "type": "text",
+                                                            "label": "(L)"
+                                                        },
+                                                        {
+                                                            "name": "12",
+                                                            "type": "text",
+                                                            "label": "(M)"
+                                                        },
+                                                        {
+                                                            "name": "13",
+                                                            "type": "text",
+                                                            "label": "(N)"
+                                                        },
+                                                        {
+                                                            "name": "14",
+                                                            "type": "text",
+                                                            "label": "(O)"
+                                                        },
+                                                        {
+                                                            "name": "15",
+                                                            "type": "text",
+                                                            "label": "(P)"
+                                                        },
+                                                        {
+                                                            "name": "16",
+                                                            "type": "text",
+                                                            "label": "(Q)"
+                                                        },
+                                                        {
+                                                            "name": "17",
+                                                            "type": "text",
+                                                            "label": "(R)"
+                                                        },
+                                                        {
+                                                            "name": "18",
+                                                            "type": "text",
+                                                            "label": "(S)"
+                                                        },
+                                                        {
+                                                            "name": "19",
+                                                            "type": "text",
+                                                            "label": "(T)"
+                                                        },
+                                                        {
+                                                            "name": "20",
+                                                            "type": "text",
+                                                            "label": "(U)"
+                                                        },
+                                                        {
+                                                            "name": "21",
+                                                            "type": "text",
+                                                            "label": "(V)"
+                                                        },
+                                                        {
+                                                            "name": "22",
+                                                            "type": "text",
+                                                            "label": "(W)"
+                                                        },
+                                                        {
+                                                            "name": "23",
+                                                            "type": "text",
+                                                            "label": "(X)"
+                                                        },
+                                                        {
+                                                            "name": "24",
+                                                            "type": "text",
+                                                            "label": "(Y)"
+                                                        },
+                                                        {
+                                                            "name": "25",
+                                                            "type": "text",
+                                                            "label": "(Z)"
+                                                        }
+                                                    ],
+                                                    "type": "collection",
+                                                    "label": "Values"
+                                                }
+                                            ]
+                                        },
+                                        "insertDataOption": {
+                                            "mode": "chose",
+                                            "label": "Insert rows"
+                                        },
+                                        "valueInputOption": {
+                                            "mode": "chose",
+                                            "label": "User entered"
+                                        },
+                                        "insertUnformatted": {
+                                            "mode": "chose"
+                                        }
+                                    },
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "google"
+                                            },
+                                            "label": "My Google connection (informesauditoriasb@gmail.com)"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "mode",
+                                        "type": "select",
+                                        "label": "Search Method",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "select",
+                                                "fromAll",
+                                                "map"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "insertUnformatted",
+                                        "type": "boolean",
+                                        "label": "Unformatted",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "valueInputOption",
+                                        "type": "select",
+                                        "label": "Value input option",
+                                        "validate": {
+                                            "enum": [
+                                                "USER_ENTERED",
+                                                "RAW"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "insertDataOption",
+                                        "type": "select",
+                                        "label": "Insert data option",
+                                        "validate": {
+                                            "enum": [
+                                                "INSERT_ROWS",
+                                                "OVERWRITE"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "from",
+                                        "type": "select",
+                                        "label": "Drive",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "drive",
+                                                "share",
+                                                "team"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "spreadsheetId",
+                                        "type": "file",
+                                        "label": "Spreadsheet ID",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "sheetId",
+                                        "type": "select",
+                                        "label": "Sheet Name",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "includesHeaders",
+                                        "type": "select",
+                                        "label": "Table contains headers",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                true,
+                                                false
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "values",
+                                        "spec": [
+                                            {
+                                                "name": "0",
+                                                "type": "text",
+                                                "label": "Fecha (A)"
+                                            },
+                                            {
+                                                "name": "1",
+                                                "type": "text",
+                                                "label": "Empresa (B)"
+                                            },
+                                            {
+                                                "name": "2",
+                                                "type": "text",
+                                                "label": "Contacto (C)"
+                                            },
+                                            {
+                                                "name": "3",
+                                                "type": "text",
+                                                "label": "Email (D)"
+                                            },
+                                            {
+                                                "name": "4",
+                                                "type": "text",
+                                                "label": "Multa Potencial (E)"
+                                            },
+                                            {
+                                                "name": "5",
+                                                "type": "text",
+                                                "label": "Link al Informe (F)"
+                                            },
+                                            {
+                                                "name": "6",
+                                                "type": "text",
+                                                "label": "(G)"
+                                            },
+                                            {
+                                                "name": "7",
+                                                "type": "text",
+                                                "label": "(H)"
+                                            },
+                                            {
+                                                "name": "8",
+                                                "type": "text",
+                                                "label": "(I)"
+                                            },
+                                            {
+                                                "name": "9",
+                                                "type": "text",
+                                                "label": "(J)"
+                                            },
+                                            {
+                                                "name": "10",
+                                                "type": "text",
+                                                "label": "(K)"
+                                            },
+                                            {
+                                                "name": "11",
+                                                "type": "text",
+                                                "label": "(L)"
+                                            },
+                                            {
+                                                "name": "12",
+                                                "type": "text",
+                                                "label": "(M)"
+                                            },
+                                            {
+                                                "name": "13",
+                                                "type": "text",
+                                                "label": "(N)"
+                                            },
+                                            {
+                                                "name": "14",
+                                                "type": "text",
+                                                "label": "(O)"
+                                            },
+                                            {
+                                                "name": "15",
+                                                "type": "text",
+                                                "label": "(P)"
+                                            },
+                                            {
+                                                "name": "16",
+                                                "type": "text",
+                                                "label": "(Q)"
+                                            },
+                                            {
+                                                "name": "17",
+                                                "type": "text",
+                                                "label": "(R)"
+                                            },
+                                            {
+                                                "name": "18",
+                                                "type": "text",
+                                                "label": "(S)"
+                                            },
+                                            {
+                                                "name": "19",
+                                                "type": "text",
+                                                "label": "(T)"
+                                            },
+                                            {
+                                                "name": "20",
+                                                "type": "text",
+                                                "label": "(U)"
+                                            },
+                                            {
+                                                "name": "21",
+                                                "type": "text",
+                                                "label": "(V)"
+                                            },
+                                            {
+                                                "name": "22",
+                                                "type": "text",
+                                                "label": "(W)"
+                                            },
+                                            {
+                                                "name": "23",
+                                                "type": "text",
+                                                "label": "(X)"
+                                            },
+                                            {
+                                                "name": "24",
+                                                "type": "text",
+                                                "label": "(Y)"
+                                            },
+                                            {
+                                                "name": "25",
+                                                "type": "text",
+                                                "label": "(Z)"
+                                            }
+                                        ],
+                                        "type": "collection",
+                                        "label": "Values"
+                                    },
+                                    {
+                                        "name": "mode",
+                                        "type": "select",
+                                        "label": "Search Method",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "select",
+                                                "fromAll",
+                                                "map"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "insertUnformatted",
+                                        "type": "boolean",
+                                        "label": "Unformatted",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "valueInputOption",
+                                        "type": "select",
+                                        "label": "Value input option",
+                                        "validate": {
+                                            "enum": [
+                                                "USER_ENTERED",
+                                                "RAW"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "insertDataOption",
+                                        "type": "select",
+                                        "label": "Insert data option",
+                                        "validate": {
+                                            "enum": [
+                                                "INSERT_ROWS",
+                                                "OVERWRITE"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "from",
+                                        "type": "select",
+                                        "label": "Drive",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "drive",
+                                                "share",
+                                                "team"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "spreadsheetId",
+                                        "type": "file",
+                                        "label": "Spreadsheet ID",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "sheetId",
+                                        "type": "select",
+                                        "label": "Sheet Name",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "includesHeaders",
+                                        "type": "select",
+                                        "label": "Table contains headers",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                true,
+                                                false
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "values",
+                                        "spec": [
+                                            {
+                                                "name": "0",
+                                                "type": "text",
+                                                "label": "Fecha (A)"
+                                            },
+                                            {
+                                                "name": "1",
+                                                "type": "text",
+                                                "label": "Empresa (B)"
+                                            },
+                                            {
+                                                "name": "2",
+                                                "type": "text",
+                                                "label": "Contacto (C)"
+                                            },
+                                            {
+                                                "name": "3",
+                                                "type": "text",
+                                                "label": "Email (D)"
+                                            },
+                                            {
+                                                "name": "4",
+                                                "type": "text",
+                                                "label": "Multa Potencial (E)"
+                                            },
+                                            {
+                                                "name": "5",
+                                                "type": "text",
+                                                "label": "Link al Informe (F)"
+                                            },
+                                            {
+                                                "name": "6",
+                                                "type": "text",
+                                                "label": "(G)"
+                                            },
+                                            {
+                                                "name": "7",
+                                                "type": "text",
+                                                "label": "(H)"
+                                            },
+                                            {
+                                                "name": "8",
+                                                "type": "text",
+                                                "label": "(I)"
+                                            },
+                                            {
+                                                "name": "9",
+                                                "type": "text",
+                                                "label": "(J)"
+                                            },
+                                            {
+                                                "name": "10",
+                                                "type": "text",
+                                                "label": "(K)"
+                                            },
+                                            {
+                                                "name": "11",
+                                                "type": "text",
+                                                "label": "(L)"
+                                            },
+                                            {
+                                                "name": "12",
+                                                "type": "text",
+                                                "label": "(M)"
+                                            },
+                                            {
+                                                "name": "13",
+                                                "type": "text",
+                                                "label": "(N)"
+                                            },
+                                            {
+                                                "name": "14",
+                                                "type": "text",
+                                                "label": "(O)"
+                                            },
+                                            {
+                                                "name": "15",
+                                                "type": "text",
+                                                "label": "(P)"
+                                            },
+                                            {
+                                                "name": "16",
+                                                "type": "text",
+                                                "label": "(Q)"
+                                            },
+                                            {
+                                                "name": "17",
+                                                "type": "text",
+                                                "label": "(R)"
+                                            },
+                                            {
+                                                "name": "18",
+                                                "type": "text",
+                                                "label": "(S)"
+                                            },
+                                            {
+                                                "name": "19",
+                                                "type": "text",
+                                                "label": "(T)"
+                                            },
+                                            {
+                                                "name": "20",
+                                                "type": "text",
+                                                "label": "(U)"
+                                            },
+                                            {
+                                                "name": "21",
+                                                "type": "text",
+                                                "label": "(V)"
+                                            },
+                                            {
+                                                "name": "22",
+                                                "type": "text",
+                                                "label": "(W)"
+                                            },
+                                            {
+                                                "name": "23",
+                                                "type": "text",
+                                                "label": "(X)"
+                                            },
+                                            {
+                                                "name": "24",
+                                                "type": "text",
+                                                "label": "(Y)"
+                                            },
+                                            {
+                                                "name": "25",
+                                                "type": "text",
+                                                "label": "(Z)"
+                                            }
+                                        ],
+                                        "type": "collection",
+                                        "label": "Values"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 27,
+                            "module": "email:ActionSendEmail",
+                            "version": 7,
+                            "parameters": {
+                                "folder": "INBOX.Sent",
+                                "account": 4461526,
+                                "accountImap": 4461528,
+                                "saveAfterSent": true
+                            },
+                            "mapper": {
+                                "cc": [],
+                                "to": [
+                                    "{{32.email_lead}}",
+                                    "contactenos@supportbrigades.com"
+                                ],
+                                "bcc": [],
+                                "from": "",
+                                "html": "Hola {{32.nombre_lead}},\n\nGracias por utilizar nuestra herramienta de diagnóstico.\n\nAdjunto a este correo encontrarás el informe preliminar con los resultados y un plan de acción recomendado para tu empresa {{32.empresa}}.\n\nUn especialista se pondrá en contacto contigo para conversar sobre los siguientes pasos.\n\nSaludos cordiales,\n\nEl Equipo de Support Brigades.",
+                                "sender": "",
+                                "headers": [],
+                                "replyTo": "",
+                                "subject": "Informe de Diagnóstico SST para {{32.empresa}}",
+                                "priority": "normal",
+                                "inReplyTo": "",
+                                "references": [],
+                                "attachments": [
+                                    {
+                                        "cid": "",
+                                        "data": "{{24.data}}",
+                                        "fileName": "{{24.name}}"
+                                    }
+                                ],
+                                "contentType": "html"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 3236,
+                                    "y": 126
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "cc": {
+                                            "mode": "chose"
+                                        },
+                                        "to": {
+                                            "mode": "chose",
+                                            "items": [
+                                                null,
+                                                null
+                                            ]
+                                        },
+                                        "bcc": {
+                                            "mode": "chose"
+                                        },
+                                        "priority": {
+                                            "label": "Normal"
+                                        },
+                                        "references": {
+                                            "mode": "chose"
+                                        },
+                                        "attachments": {
+                                            "mode": "chose",
+                                            "items": [
+                                                null
+                                            ]
+                                        },
+                                        "contentType": {
+                                            "label": "HTML"
+                                        }
+                                    },
+                                    "parameters": {
+                                        "folder": {
+                                            "label": "Sent"
+                                        },
+                                        "account": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "smtp"
+                                            },
+                                            "label": "My Others (SMTP) connection (SMTP calculadora.multassst@supportbrigades.com)"
+                                        },
+                                        "accountImap": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "imap"
+                                            },
+                                            "label": "My Others (IMAP) connection (IMAP calculadora.multassst@supportbrigades.com)"
+                                        },
+                                        "saveAfterSent": {
+                                            "label": "Yes"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "account",
+                                        "type": "account:smtp,google-restricted,microsoft-smtp-imap",
+                                        "label": "Connection",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "saveAfterSent",
+                                        "type": "select",
+                                        "label": "Save message after sending",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                true,
+                                                false
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "type": "hidden"
+                                    },
+                                    {
+                                        "name": "accountImap",
+                                        "type": "account:imap,google-restricted,microsoft-smtp-imap",
+                                        "label": "Connection",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "folder",
+                                        "type": "select",
+                                        "label": "Folder",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "to",
+                                        "spec": {
+                                            "name": "value",
+                                            "type": "email",
+                                            "label": "Email address",
+                                            "required": true
+                                        },
+                                        "type": "array",
+                                        "label": "To",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "subject",
+                                        "type": "text",
+                                        "label": "Subject"
+                                    },
+                                    {
+                                        "name": "contentType",
+                                        "type": "select",
+                                        "label": "Content Type",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "html",
+                                                "text"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "attachments",
+                                        "spec": [
+                                            {
+                                                "name": "fileName",
+                                                "type": "filename",
+                                                "label": "File name",
+                                                "required": true,
+                                                "semantic": "file:name"
+                                            },
+                                            {
+                                                "name": "data",
+                                                "type": "buffer",
+                                                "label": "Data",
+                                                "required": true,
+                                                "semantic": "file:data"
+                                            },
+                                            {
+                                                "name": "cid",
+                                                "type": "text",
+                                                "label": "Content-ID"
+                                            }
+                                        ],
+                                        "type": "array",
+                                        "label": "Attachments"
+                                    },
+                                    {
+                                        "name": "cc",
+                                        "spec": {
+                                            "name": "value",
+                                            "type": "email",
+                                            "label": "Email address"
+                                        },
+                                        "type": "array",
+                                        "label": "Copy recipient"
+                                    },
+                                    {
+                                        "name": "bcc",
+                                        "spec": {
+                                            "name": "value",
+                                            "type": "email",
+                                            "label": "Email address"
+                                        },
+                                        "type": "array",
+                                        "label": "Blind copy recipient"
+                                    },
+                                    {
+                                        "name": "from",
+                                        "type": "text",
+                                        "label": "From"
+                                    },
+                                    {
+                                        "name": "sender",
+                                        "type": "text",
+                                        "label": "Sender"
+                                    },
+                                    {
+                                        "name": "replyTo",
+                                        "type": "text",
+                                        "label": "Reply-To"
+                                    },
+                                    {
+                                        "name": "inReplyTo",
+                                        "type": "text",
+                                        "label": "In-Reply-To"
+                                    },
+                                    {
+                                        "name": "references",
+                                        "spec": {
+                                            "name": "value",
+                                            "type": "text",
+                                            "label": "Reference",
+                                            "required": true
+                                        },
+                                        "type": "array",
+                                        "label": "References"
+                                    },
+                                    {
+                                        "name": "priority",
+                                        "type": "select",
+                                        "label": "Priority",
+                                        "validate": {
+                                            "enum": [
+                                                "high",
+                                                "normal",
+                                                "low"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "headers",
+                                        "spec": [
+                                            {
+                                                "name": "key",
+                                                "type": "text",
+                                                "label": "Key",
+                                                "required": true
+                                            },
+                                            {
+                                                "name": "value",
+                                                "type": "text",
+                                                "label": "Value",
+                                                "required": true
+                                            }
+                                        ],
+                                        "type": "array",
+                                        "label": "Headers"
+                                    },
+                                    {
+                                        "name": "html",
+                                        "type": "text",
+                                        "label": "Content"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 26,
+                            "module": "email:ActionSendEmail",
+                            "version": 7,
+                            "parameters": {
+                                "folder": "INBOX.Sent",
+                                "account": 4461526,
+                                "accountImap": 4461528,
+                                "saveAfterSent": true
+                            },
+                            "filter": {
+                                "name": "SIN OBSERVACIONES",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{32.total_incumplimientos}}",
+                                            "b": "0",
+                                            "o": "text:equal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "cc": [],
+                                "to": [
+                                    "{{32.email_lead}}"
+                                ],
+                                "bcc": [],
+                                "from": "",
+                                "html": "Hola {{32.nombre_lead}},\n\n¡Excelentes noticias!\n\nBasado en las respuestas que proporcionaste para tu empresa, {{32.empresa}}, nuestro sistema de diagnóstico preliminar indica que cumples con todos los puntos evaluados. Esto demuestra un fuerte compromiso con la Seguridad y Salud en el Trabajo.\n\nNo es necesario generar un informe de hallazgos en este caso. Si tienes alguna consulta adicional o necesitas asesoría en temas más específicos de SST, no dudes en contactarnos.\n\nSigue así,\nEl Equipo de Support Brigades.",
+                                "sender": "",
+                                "headers": [],
+                                "replyTo": "",
+                                "subject": "Recibiste tu Informe SST de la empresa {{32.empresa}}",
+                                "priority": "normal",
+                                "inReplyTo": "",
+                                "references": [],
+                                "attachments": [],
+                                "contentType": "html"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 636,
+                                    "y": -179
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "cc": {
+                                            "mode": "chose"
+                                        },
+                                        "to": {
+                                            "mode": "chose",
+                                            "items": [
+                                                null
+                                            ]
+                                        },
+                                        "bcc": {
+                                            "mode": "chose"
+                                        },
+                                        "priority": {
+                                            "label": "Normal"
+                                        },
+                                        "references": {
+                                            "mode": "chose"
+                                        },
+                                        "attachments": {
+                                            "mode": "chose"
+                                        },
+                                        "contentType": {
+                                            "label": "HTML"
+                                        }
+                                    },
+                                    "parameters": {
+                                        "folder": {
+                                            "label": "Sent"
+                                        },
+                                        "account": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "smtp"
+                                            },
+                                            "label": "My Others (SMTP) connection (SMTP calculadora.multassst@supportbrigades.com)"
+                                        },
+                                        "accountImap": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "imap"
+                                            },
+                                            "label": "My Others (IMAP) connection (IMAP calculadora.multassst@supportbrigades.com)"
+                                        },
+                                        "saveAfterSent": {
+                                            "label": "Yes"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "account",
+                                        "type": "account:smtp,google-restricted,microsoft-smtp-imap",
+                                        "label": "Connection",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "saveAfterSent",
+                                        "type": "select",
+                                        "label": "Save message after sending",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                true,
+                                                false
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "type": "hidden"
+                                    },
+                                    {
+                                        "name": "accountImap",
+                                        "type": "account:imap,google-restricted,microsoft-smtp-imap",
+                                        "label": "Connection",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "folder",
+                                        "type": "select",
+                                        "label": "Folder",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "to",
+                                        "spec": {
+                                            "name": "value",
+                                            "type": "email",
+                                            "label": "Email address",
+                                            "required": true
+                                        },
+                                        "type": "array",
+                                        "label": "To",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "subject",
+                                        "type": "text",
+                                        "label": "Subject"
+                                    },
+                                    {
+                                        "name": "contentType",
+                                        "type": "select",
+                                        "label": "Content Type",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "html",
+                                                "text"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "attachments",
+                                        "spec": [
+                                            {
+                                                "name": "fileName",
+                                                "type": "filename",
+                                                "label": "File name",
+                                                "required": true,
+                                                "semantic": "file:name"
+                                            },
+                                            {
+                                                "name": "data",
+                                                "type": "buffer",
+                                                "label": "Data",
+                                                "required": true,
+                                                "semantic": "file:data"
+                                            },
+                                            {
+                                                "name": "cid",
+                                                "type": "text",
+                                                "label": "Content-ID"
+                                            }
+                                        ],
+                                        "type": "array",
+                                        "label": "Attachments"
+                                    },
+                                    {
+                                        "name": "cc",
+                                        "spec": {
+                                            "name": "value",
+                                            "type": "email",
+                                            "label": "Email address"
+                                        },
+                                        "type": "array",
+                                        "label": "Copy recipient"
+                                    },
+                                    {
+                                        "name": "bcc",
+                                        "spec": {
+                                            "name": "value",
+                                            "type": "email",
+                                            "label": "Email address"
+                                        },
+                                        "type": "array",
+                                        "label": "Blind copy recipient"
+                                    },
+                                    {
+                                        "name": "from",
+                                        "type": "text",
+                                        "label": "From"
+                                    },
+                                    {
+                                        "name": "sender",
+                                        "type": "text",
+                                        "label": "Sender"
+                                    },
+                                    {
+                                        "name": "replyTo",
+                                        "type": "text",
+                                        "label": "Reply-To"
+                                    },
+                                    {
+                                        "name": "inReplyTo",
+                                        "type": "text",
+                                        "label": "In-Reply-To"
+                                    },
+                                    {
+                                        "name": "references",
+                                        "spec": {
+                                            "name": "value",
+                                            "type": "text",
+                                            "label": "Reference",
+                                            "required": true
+                                        },
+                                        "type": "array",
+                                        "label": "References"
+                                    },
+                                    {
+                                        "name": "priority",
+                                        "type": "select",
+                                        "label": "Priority",
+                                        "validate": {
+                                            "enum": [
+                                                "high",
+                                                "normal",
+                                                "low"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "headers",
+                                        "spec": [
+                                            {
+                                                "name": "key",
+                                                "type": "text",
+                                                "label": "Key",
+                                                "required": true
+                                            },
+                                            {
+                                                "name": "value",
+                                                "type": "text",
+                                                "label": "Value",
+                                                "required": true
+                                            }
+                                        ],
+                                        "type": "array",
+                                        "label": "Headers"
+                                    },
+                                    {
+                                        "name": "html",
+                                        "type": "text",
+                                        "label": "Content"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "us1.make.com",
+        "notes": []
+    }
+}
