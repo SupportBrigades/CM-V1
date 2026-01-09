@@ -77,9 +77,9 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
       </div>
 
       <div className="min-h-full flex items-start justify-center xl:justify-between gap-x-8 lg:gap-x-12 px-2 sm:px-6 lg:px-12">
-        {/* PANEL IZQUIERDO: Texto + Video - Solo en xl+ */}
-        <div className="hidden xl:flex xl:flex-col xl:flex-1 xl:pl-8 xl:pt-[130px] 2xl:pt-[146px] xl:pb-8 xl:justify-between xl:min-h-[calc(100vh-4rem)]">
-          {/* Texto Animado - Altura fija */}
+        {/* PANEL IZQUIERDO: Texto - Solo en xl+ */}
+        <div className="hidden xl:flex xl:flex-col xl:flex-1 xl:pl-8 xl:pt-[220px] 2xl:pt-[260px] xl:pb-8 xl:justify-start xl:min-h-[calc(100vh-4rem)]">
+          {/* Texto Animado - Centrado verticalmente */}
           <div className="h-48 2xl:h-56">
             <TextType
               as="h1"
@@ -95,12 +95,10 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
             />
           </div>
 
-          {/* Video Tutorial - Posición fija abajo */}
+          {/* VIDEO TUTORIAL - Comentado temporalmente hasta tener el video definitivo
           <div className="max-w-lg 2xl:max-w-xl mt-16">
-            {/* Wrapper para el efecto de luz */}
             <div className="video-glow-border rounded-xl p-[2px]">
               <div className="relative rounded-xl overflow-hidden shadow-2xl bg-slate-900">
-                {/* MEJORA CLS: overflow-hidden previene saltos de layout */}
                 <div className="aspect-video overflow-hidden">
                   {videoPlaying ? (
                     <iframe
@@ -115,21 +113,17 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
                       onClick={() => setVideoPlaying(true)}
                       className="relative w-full h-full group cursor-pointer bg-slate-900"
                     >
-                      {/* Miniatura del video */}
                       <img
                         src="https://img.youtube.com/vi/v_L4lTXpie4/maxresdefault.jpg"
                         alt="Tutorial de la herramienta de Diagnóstico SST"
                         className="w-full h-full object-cover scale-105"
                       />
-                      {/* Overlay oscuro */}
                       <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors scale-105" />
-                      {/* Botón de Play */}
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-white transition-all duration-300">
                           <Play className="w-7 h-7 sm:w-9 sm:h-9 text-primary ml-1" fill="currentColor" />
                         </div>
                       </div>
-                      {/* Texto opcional */}
                       <div className="absolute bottom-4 left-4 right-4">
                         <p className="text-white text-sm font-medium drop-shadow-lg">
                           ▶ Aprende a usar nuestra herramienta de Diagnóstico
@@ -141,9 +135,10 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
               </div>
             </div>
           </div>
+          */}
         </div>
-        {/* FORMULARIO */}
-        <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-lg xl:max-w-md 2xl:max-w-xl pt-14 sm:pt-16 pb-4">
+        {/* FORMULARIO - Subido para reducir espacio superior */}
+        <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-lg xl:max-w-md 2xl:max-w-xl pt-6 sm:pt-8 pb-4">
           <div className="sb-card p-3 sm:p-5 lg:p-6">
             <div className="text-center mb-4 sm:mb-6">
               <h2 className="text-fluid-xl font-bold text-foreground mb-1 sm:mb-2 leading-tight">
@@ -152,13 +147,6 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
               <p className="text-muted-foreground text-fluid-xs italic">
                 Completa tus datos para iniciar la evaluación
               </p>
-            </div>
-            <div className="mb-4 sm:mb-6">
-              <div className="flex items-center justify-center gap-2 text-fluid-xs text-muted-foreground">
-                <span className="font-medium text-primary">Paso 1 de 3</span>
-                <span>•</span>
-                <span>Datos de la Empresa</span>
-              </div>
             </div>
             {/* GRILLA DEL FORMULARIO */}
             <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-fluid-sm">
