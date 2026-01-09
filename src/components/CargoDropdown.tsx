@@ -116,11 +116,11 @@ export const CargoDropdown: React.FC<CargoDropdownProps> = ({ value, onChange, e
                 <div className="absolute z-50 w-full mt-1 bg-background border border-input rounded-lg shadow-lg max-h-60 sm:max-h-80 overflow-y-auto">
                     {Object.entries(categoryLabels).map(([key, label]) => (
                         <div key={key} className="border-b border-input last:border-b-0">
-                            {/* Categoría */}
+                            {/* Categoría - MEJORA: min-h-[44px] para touch target accesible */}
                             <button
                                 type="button"
                                 onClick={() => handleCategoryClick(key)}
-                                className="w-full px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between hover:bg-muted/50 transition-colors text-left"
+                                className="w-full px-3 py-3 sm:px-4 sm:py-3 flex items-center justify-between hover:bg-muted/50 transition-colors text-left min-h-[44px]"
                             >
                                 <span className="font-medium text-foreground text-fluid-xs">{label}</span>
                                 <ChevronRight
@@ -137,7 +137,7 @@ export const CargoDropdown: React.FC<CargoDropdownProps> = ({ value, onChange, e
                                             key={cargo}
                                             type="button"
                                             onClick={() => handleCargoSelect(cargo)}
-                                            className="w-full px-4 py-2 sm:px-6 sm:py-2.5 flex items-center justify-between hover:bg-primary/10 transition-colors text-left"
+                                            className="w-full px-4 py-3 sm:px-6 sm:py-2.5 flex items-center justify-between hover:bg-primary/10 transition-colors text-left min-h-[44px]"
                                         >
                                             <span className="text-fluid-xs text-foreground">{cargo}</span>
                                             {value === cargo && <Check className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />}

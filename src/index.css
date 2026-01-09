@@ -205,6 +205,8 @@ Primary: Support Brigades Blue #0056B4
     @apply w-full rounded-lg border border-border bg-background hover:border-primary hover:bg-accent text-card-foreground font-medium transition-all duration-200;
     padding: var(--space-fluid-md) var(--space-fluid-lg);
     font-size: var(--text-fluid-base);
+    /* MEJORA: Altura mínima para touch targets en móviles */
+    min-height: 48px;
   }
 
   .sb-response-button-selected {
