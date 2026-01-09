@@ -192,15 +192,17 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
           />
         </div>
 
-        {/* Info de fase y progreso */}
-        <div className="px-6 lg:px-10 xl:px-16 py-3 lg:py-4">
+        {/* Info de fase y progreso - MEJORA: px-3 en móvil para ganar espacio */}
+        <div className="px-3 sm:px-6 lg:px-10 xl:px-16 py-3 lg:py-4">
           <div className="flex items-center justify-between">
             {/* Logo + Nombre de fase */}
             <div className="flex items-center gap-3 lg:gap-4">
               <img
                 src="https://www.supportbrigades.com/wp-content/uploads/2021/01/logo-support-brigades-1.png"
                 alt="Support Brigades"
-                className="h-8 lg:h-10 hidden sm:block"
+                width={120}
+                height={32}
+                className="h-8 lg:h-10 w-auto hidden sm:block"
               />
               <div className="hidden sm:block w-px h-8 bg-gray-200" />
               <div>
@@ -280,12 +282,14 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
       {/* Contenido principal */}
       <div className="pt-28 sm:pt-32 pb-8 sm:pb-12 px-3 sm:px-4 min-h-[100dvh] flex items-center justify-center">
         <div className={`w-full max-w-[calc(100vw-1.5rem)] sm:max-w-2xl lg:max-w-4xl transition-all duration-300 ${isAnimating ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'}`}>
-          {/* Logo */}
+          {/* Logo con dimensiones explícitas para prevenir CLS */}
           <div className="text-center mb-4">
             <img
               src="https://www.supportbrigades.com/wp-content/uploads/2025/09/xxpfbFuUGcA4.png"
               alt="Support Brigades"
-              className="h-12 mx-auto"
+              width={160}
+              height={48}
+              className="h-12 w-auto mx-auto"
             />
           </div>
 

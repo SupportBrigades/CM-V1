@@ -63,7 +63,7 @@ export const SSTDiagnosis: React.FC = () => {
       tipo_empresa: companyData.tipoEmpresa,
       respuestas: data
     };
-    
+
     console.log("Enviando este payload al backend:", payload);
 
     try {
@@ -116,21 +116,21 @@ export const SSTDiagnosis: React.FC = () => {
         <CompanyDataForm onSubmit={handleCompanyDataSubmit} />
       )}
       {currentStep === 2 && (
-        <div className="w-full max-w-2xl mx-auto py-8 px-4">
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <Terminal className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
-            <InteractiveQuestionnaire
-              companyData={companyData}
-              onComplete={handleQuestionnaireComplete}
-              onBack={() => setCurrentStep(1)}
-            />
+        <div className="w-full px-3 sm:px-4">
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+          <InteractiveQuestionnaire
+            companyData={companyData}
+            onComplete={handleQuestionnaireComplete}
+            onBack={() => setCurrentStep(1)}
+          />
         </div>
       )}
       {currentStep === 3 && (

@@ -65,12 +65,14 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
 
   return (
     <div className="min-h-[100dvh] py-4 sm:py-8 px-3 sm:px-4 relative overflow-x-hidden">
-      {/* Logo - responsive */}
+      {/* Logo - responsive con dimensiones explícitas para prevenir CLS */}
       <div className="absolute top-3 left-3 sm:top-6 sm:left-6 z-10">
         <img
           src="https://www.supportbrigades.com/wp-content/uploads/2025/09/xxpfbFuUGcA4.png"
           alt="Support Brigades"
-          className="h-10 sm:h-14 lg:h-16"
+          width={160}
+          height={40}
+          className="h-10 sm:h-14 lg:h-16 w-auto"
         />
       </div>
 
@@ -98,7 +100,8 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
             {/* Wrapper para el efecto de luz */}
             <div className="video-glow-border rounded-xl p-[2px]">
               <div className="relative rounded-xl overflow-hidden shadow-2xl bg-slate-900">
-                <div className="aspect-video">
+                {/* MEJORA CLS: overflow-hidden previene saltos de layout */}
+                <div className="aspect-video overflow-hidden">
                   {videoPlaying ? (
                     <iframe
                       src="https://www.youtube.com/embed/v_L4lTXpie4?autoplay=1&rel=0&modestbranding=1"
@@ -181,7 +184,8 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
               </div>
               <div>
                 <label htmlFor="telefono" className="block text-fluid-xs font-medium text-foreground mb-1 sm:mb-2">Número de contacto *</label>
-                <input type="tel" id="telefono" value={formData.telefono} onChange={(e) => handleInputChange('telefono', e.target.value)} className="w-full input-fluid border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background" placeholder="+51 999 999 999" />
+                {/* MEJORA: inputMode="tel" + autoComplete para teclado móvil optimizado */}
+                <input type="tel" inputMode="tel" autoComplete="tel" id="telefono" value={formData.telefono} onChange={(e) => handleInputChange('telefono', e.target.value)} className="w-full input-fluid border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background" placeholder="+51 999 999 999" />
                 {errors.telefono && (<p className="text-destructive text-xs mt-1">{errors.telefono}</p>)}
               </div>
               <CustomDropdown
@@ -198,49 +202,54 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
               />
               <div>
                 <label htmlFor="trabajadores" className="block text-fluid-xs font-medium text-foreground mb-1 sm:mb-2">Número de trabajadores *</label>
-                <input type="number" id="trabajadores" min="1" value={formData.numeroTrabajadores || ''} onChange={(e) => handleInputChange('numeroTrabajadores', parseInt(e.target.value) || 0)} className="w-full input-fluid border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background" placeholder="Ej: 25" />
+                {/* MEJORA: type="text" + inputMode="numeric" + pattern para teclado numérico en iOS/Android */}
+                <input type="text" inputMode="numeric" pattern="[0-9]*" id="trabajadores" value={formData.numeroTrabajadores || ''} onChange={(e) => handleInputChange('numeroTrabajadores', parseInt(e.target.value) || 0)} className="w-full input-fluid border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background" placeholder="Ej: 25" />
                 {errors.numeroTrabajadores && (<p className="text-destructive text-xs mt-1">{errors.numeroTrabajadores}</p>)}
               </div>
 
-              {/* Casillas de aceptación de políticas */}
+              {/* MEJORA ACCESIBILIDAD: Checkboxes con id/htmlFor y tamaño aumentado (w-5 h-5) */}
               <div className="sm:col-span-2 space-y-2 sm:space-y-3">
-                <label className="flex items-start gap-3 cursor-pointer">
+                <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
+                    id="tratamiento-datos"
                     defaultChecked={true}
-                    className="mt-1 w-4 h-4 rounded border-input text-primary focus:ring-primary"
+                    className="mt-1 w-5 h-5 min-w-[20px] rounded border-input text-primary focus:ring-primary cursor-pointer"
                   />
-                  <span className="text-fluid-xs text-foreground">
+                  <label htmlFor="tratamiento-datos" className="text-fluid-xs text-foreground cursor-pointer">
                     Aceptación del{' '}
                     <a
                       href="https://www.supportbrigades.com/politica-de-tratamiento-de-datos-personales/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Tratamiento de Datos Personales
                     </a>
-                  </span>
-                </label>
+                  </label>
+                </div>
 
-                <label className="flex items-start gap-3 cursor-pointer">
+                <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
+                    id="usos-adicionales"
                     defaultChecked={true}
-                    className="mt-1 w-4 h-4 rounded border-input text-primary focus:ring-primary"
+                    className="mt-1 w-5 h-5 min-w-[20px] rounded border-input text-primary focus:ring-primary cursor-pointer"
                   />
-                  <span className="text-sm text-foreground">
+                  <label htmlFor="usos-adicionales" className="text-fluid-xs text-foreground cursor-pointer">
                     Autorización para{' '}
                     <a
                       href="https://www.supportbrigades.com/autorizacion-de-usos-adicionales-de-datos-personales/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Usos Adicionales de Datos Personales
                     </a>
-                  </span>
-                </label>
+                  </label>
+                </div>
               </div>
 
               <div className="sm:col-span-2">
