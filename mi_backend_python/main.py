@@ -1,6 +1,7 @@
 # main.py
 import logging
 import os
+from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Dict
 from dotenv import load_dotenv
@@ -18,10 +19,12 @@ from constants import (
     VALOR_UIT,
 )
 import httpx
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ValidationError
+from pathlib import Path
 
 # --- CONFIGURACIÓN DEL LOGGING ---
 # Esto configurará el logger para que los mensajes se muestren en la salida
@@ -129,7 +132,26 @@ def calcular_multa_sunafil(datos_formulario):
     }
 # --- FIN DE TU LÓGICA ---
 
-app = FastAPI()
+# --- LIFESPAN: Cliente HTTP compartido para mejor rendimiento ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Gestiona el ciclo de vida del cliente HTTP compartido.
+    
+    Beneficios de rendimiento:
+    - Reutiliza conexiones TCP (connection pooling)
+    - Evita overhead de crear cliente por cada request
+    - Timeout configurado para evitar requests colgados
+    """
+    app.state.http_client = httpx.AsyncClient(
+        timeout=httpx.Timeout(30.0, connect=10.0),
+        limits=httpx.Limits(max_connections=100, max_keepalive_connections=20)
+    )
+    logging.info("Cliente HTTP compartido inicializado")
+    yield
+    await app.state.http_client.aclose()
+    logging.info("Cliente HTTP compartido cerrado")
+
+app = FastAPI(lifespan=lifespan)
 
 # Permitir la comunicación con tu app de React (CORS)
 origins = [ "https://calculadora.supportbrigades.com", "http://localhost:8080", "http://localhost:8081", "http://localhost:5173" ]
@@ -142,6 +164,9 @@ app.add_middleware(
 )
 
 class DatosFormulario(BaseModel):
+    """Modelo de datos del formulario SST con protección contra inyección de campos."""
+    model_config = {"extra": "forbid"}
+    
     nombre: str
     email: str
     telefono: str
@@ -151,8 +176,164 @@ class DatosFormulario(BaseModel):
     tipo_empresa: str
     respuestas: Dict[str, str]
 
+
+# --- HEALTH CHECK ENDPOINT ---
+# Permite a los servicios cloud (Google Cloud Run, Kubernetes, etc.)
+# verificar que la aplicación está funcionando antes de enviar tráfico
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+
+# --- CONFIGURACIÓN DE AUTENTICACIÓN DE WEBHOOK ---
+MAKE_AUTH_TOKEN = os.environ.get("MAKE_AUTH_TOKEN")
+if not MAKE_AUTH_TOKEN:
+    logging.warning("⚠️ MAKE_AUTH_TOKEN no configurado - webhook sin autenticación")
+else:
+    logging.info("🔐 MAKE_AUTH_TOKEN cargado correctamente")
+
+# --- VALIDACIÓN DE PROTOCOLO HTTPS ---
+def validar_protocolo_https(url: str) -> bool:
+    """Valida que la URL del webhook utilice protocolo HTTPS.
+    
+    Returns:
+        bool: True si es HTTPS, False si es HTTP inseguro
+    """
+    if url and url.startswith("http://") and "localhost" not in url:
+        logging.critical("🚨 ALERTA CRÍTICA: MAKE_WEBHOOK_URL usa HTTP inseguro!")
+        logging.critical("🚨 Los datos se transmitirían sin cifrado TLS.")
+        logging.critical("🚨 Cambie a https:// inmediatamente en su archivo .env")
+        return False
+    elif url and url.startswith("https://"):
+        logging.info("✅ Protocolo HTTPS validado correctamente")
+        return True
+    return True  # localhost permitido para desarrollo
+
+
+# Validar protocolo al inicio
+if MAKE_WEBHOOK_URL:
+    validar_protocolo_https(MAKE_WEBHOOK_URL)
+
+
+# --- FUNCIÓN BACKGROUND: Envío asíncrono a Make.com ---
+async def enviar_a_make_background(
+    data: dict, 
+    http_client: httpx.AsyncClient,
+    empresa: str
+):
+    """Envía datos a Make.com en background con seguridad reforzada.
+    
+    Esta función se ejecuta DESPUÉS de que el usuario recibe su respuesta,
+    eliminando la latencia del webhook de la experiencia del usuario.
+    
+    Características de seguridad:
+    - Encabezado X-Webhook-Token para autenticación
+    - Validación de protocolo HTTPS
+    - Reintentos con backoff exponencial
+    - Manejo específico de errores 500 (Make Down) y 429 (Rate Limit)
+    """
+    import asyncio
+    
+    max_retries = 3
+    base_delay = 2  # segundos
+    
+    # Validación de seguridad del protocolo
+    if MAKE_WEBHOOK_URL and MAKE_WEBHOOK_URL.startswith("http://") and "localhost" not in MAKE_WEBHOOK_URL:
+        logging.error(f"❌ [Background] Envío BLOQUEADO para {empresa}: protocolo HTTP inseguro detectado")
+        return
+    
+    # Construir headers de autenticación
+    headers = {}
+    if MAKE_AUTH_TOKEN:
+        headers["X-Webhook-Token"] = MAKE_AUTH_TOKEN
+        logging.debug(f"🔐 [Background] Header de autenticación incluido para: {empresa}")
+    else:
+        logging.warning(f"⚠️ [Background] Enviando sin autenticación para: {empresa}")
+    
+    for attempt in range(max_retries):
+        try:
+            response = await http_client.post(
+                MAKE_WEBHOOK_URL,
+                json=data,
+                headers=headers
+            )
+            response.raise_for_status()
+            logging.info(f"✅ [Background] Diagnóstico enviado a Make para: {empresa} (intento {attempt + 1})")
+            return  # Éxito, salir
+            
+        except httpx.HTTPStatusError as e:
+            status_code = e.response.status_code
+            
+            # Error 500: Make.com caído
+            if status_code >= 500:
+                logging.error(
+                    f"🔴 [Background] Make.com DOWN (HTTP {status_code}) para {empresa}. "
+                    f"Intento {attempt + 1}/{max_retries}. El servidor NO se detuvo."
+                )
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)  # Backoff exponencial
+                    logging.info(f"⏳ [Background] Reintentando en {delay}s...")
+                    await asyncio.sleep(delay)
+                else:
+                    logging.error(
+                        f"❌ [Background] Error definitivo (Make Down) para {empresa}. "
+                        f"Datos NO entregados. Considere implementar cola persistente."
+                    )
+            
+            # Error 429: Rate Limit
+            elif status_code == 429:
+                retry_after = e.response.headers.get("Retry-After", "60")
+                logging.warning(
+                    f"🟡 [Background] RATE LIMIT (HTTP 429) para {empresa}. "
+                    f"Make solicita esperar {retry_after}s."
+                )
+                if attempt < max_retries - 1:
+                    # Respetar Retry-After si está disponible
+                    try:
+                        delay = min(int(retry_after), 60)  # Máximo 60s de espera
+                    except ValueError:
+                        delay = base_delay * (2 ** attempt)
+                    logging.info(f"⏳ [Background] Procesamiento en cola. Reintentando en {delay}s...")
+                    await asyncio.sleep(delay)
+                else:
+                    logging.error(
+                        f"❌ [Background] Rate limit persistente para {empresa}. "
+                        f"Datos en cola excedieron reintentos."
+                    )
+            
+            # Otros errores HTTP
+            else:
+                logging.warning(
+                    f"⚠️ [Background] Error HTTP {status_code} para {empresa}. "
+                    f"Intento {attempt + 1}/{max_retries}"
+                )
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(base_delay * (2 ** attempt))
+                else:
+                    logging.error(f"❌ [Background] Error definitivo (HTTP {status_code}) para {empresa}")
+                    
+        except httpx.TimeoutException as e:
+            logging.warning(
+                f"⏱️ [Background] Timeout al enviar a Make para {empresa}. "
+                f"Intento {attempt + 1}/{max_retries}: {e}"
+            )
+            if attempt < max_retries - 1:
+                await asyncio.sleep(base_delay * (2 ** attempt))
+            else:
+                logging.error(f"❌ [Background] Timeout definitivo para {empresa}")
+                
+        except httpx.HTTPError as e:
+            logging.warning(
+                f"⚠️ [Background] Error de red para {empresa}. "
+                f"Intento {attempt + 1}/{max_retries}: {e}"
+            )
+            if attempt < max_retries - 1:
+                await asyncio.sleep(base_delay * (2 ** attempt))
+            else:
+                logging.error(f"❌ [Background] Error de red definitivo para {empresa}: {e}")
+
 @app.post("/api/diagnostico")
-async def ejecutar_diagnostico(request: Request):
+async def ejecutar_diagnostico(request: Request, background_tasks: BackgroundTasks):
     try:
         json_data = await request.json()
         datos = DatosFormulario.model_validate(json_data)
@@ -179,22 +360,71 @@ async def ejecutar_diagnostico(request: Request):
         'created_at': datetime.now().isoformat()
     }
     
-    # LOG de depuración - ver exactamente qué se envía
-    logging.info(f"=== DATOS ENVIADOS A MAKE ===")
-    logging.info(f"monto_multa_soles enviado: {data_to_insert['monto_multa_soles']}")
-    logging.info(f"resultado['multa']: {resultado['multa']}")
-    async with httpx.AsyncClient() as client:
-        try:
-            # Enviamos los datos al Webhook de Make
-            response = await client.post(MAKE_WEBHOOK_URL, json=data_to_insert)
-            response.raise_for_status() # Lanza error si el status no es 200-299
-            
-            logging.info(f"Diagnóstico enviado exitosamente a Make para: {resultado['lead']['empresa']}")
+    # LOG de depuración
+    logging.info(f"=== DIAGNÓSTICO PROCESADO ===")
+    logging.info(f"Empresa: {resultado['lead']['empresa']}")
+    logging.info(f"Multa calculada: S/ {data_to_insert['monto_multa_soles']:.2f}")
+    
+    # ✨ ENVÍO ASÍNCRONO: El usuario NO espera a Make.com
+    # La tarea se ejecuta en background después de enviar la respuesta
+    webhook_status = "🟢 activo" if MAKE_WEBHOOK_URL else "🔴 no configurado"
+    auth_status = "🔐 autenticado" if MAKE_AUTH_TOKEN else "⚠️ sin autenticación"
+    
+    if MAKE_WEBHOOK_URL:
+        background_tasks.add_task(
+            enviar_a_make_background,
+            data_to_insert,
+            request.app.state.http_client,
+            resultado['lead']['empresa']
+        )
+        logging.info(
+            f"📤 Tarea ENCOLADA exitosamente para: {resultado['lead']['empresa']} | "
+            f"Webhook: {webhook_status} | Auth: {auth_status}"
+        )
+    else:
+        logging.warning(
+            f"⚠️ Tarea NO encolada para: {resultado['lead']['empresa']} - "
+            f"MAKE_WEBHOOK_URL no configurado"
+        )
+    
+    # Respuesta INMEDIATA al usuario (no espera el webhook)
+    return {
+        "status": "success", 
+        "message": "Diagnóstico recibido y procesado.",
+        "diagnostico": {
+            "severidad_maxima": resultado['diagnostico']['severidad_maxima'],
+            "total_incumplimientos": resultado['diagnostico']['total_incumplimientos'],
+            "monto_multa_soles": resultado['multa']['monto_final_soles']
+        }
+    }
 
-        except httpx.HTTPError as e:
-            # Usamos logging para registrar el error de conexión
-            logging.error(f"Error al enviar a Make: {e}")
-            # Retornamos un mensaje genérico al usuario
-            return JSONResponse(status_code=500, content={"status": "error", "message": "Error al conectar con el sistema de automatización."})
 
-    return {"status": "success", "message": "Diagnóstico recibido y procesado."}
+# ==============================================================================
+# SERVIR ARCHIVOS ESTÁTICOS DEL FRONTEND (Solo en producción/Docker)
+# ==============================================================================
+# Este bloque permite que el contenedor sea "todo en uno", sirviendo tanto
+# la API como el frontend de React desde el mismo servidor.
+# La carpeta "static" se crea durante el build del Dockerfile.
+# ==============================================================================
+
+STATIC_DIR = Path(__file__).parent / "static"
+
+if STATIC_DIR.exists():
+    # Montar archivos estáticos en la raíz
+    # html=True permite servir index.html automáticamente
+    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+    logging.info(f"📁 Frontend estático montado desde: {STATIC_DIR}")
+    
+    # Manejador para SPA: cualquier ruta no encontrada sirve index.html
+    # Esto permite que React Router maneje las rutas del frontend
+    @app.exception_handler(404)
+    async def spa_fallback(request: Request, exc):
+        # Solo aplicar fallback si no es una ruta de API
+        if not request.url.path.startswith("/api"):
+            index_path = STATIC_DIR / "index.html"
+            if index_path.exists():
+                return FileResponse(str(index_path))
+        # Si es una ruta de API o index.html no existe, retornar 404 normal
+        return JSONResponse(status_code=404, content={"detail": "Not found"})
+else:
+    logging.info("⚠️ Carpeta 'static' no encontrada - modo desarrollo (frontend separado)")

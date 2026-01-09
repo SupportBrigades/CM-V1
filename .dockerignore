@@ -1,0 +1,62 @@
+# ==============================================================================
+# .dockerignore - Excluye archivos del contexto de build de Docker
+# ==============================================================================
+# IMPORTANTE: Esto reduce el tamaño del contexto y PREVIENE que secretos
+# queden "horneados" en la imagen Docker.
+# ==============================================================================
+
+# --- SEGURIDAD: Archivos de entorno con secretos ---
+.env
+mi_backend_python/.env
+*.env.local
+*.env.production
+
+# --- Node.js ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+*.egg-info/
+
+# --- Control de versiones ---
+.git/
+.gitignore
+.gitattributes
+
+# --- IDEs y editores ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# --- Builds anteriores (evita confusión) ---
+dist/
+build/
+*.zip
+
+# --- Documentación y archivos innecesarios ---
+README.md
+DEVELOPMENT_NOTES.md
+*.md
+docs/
+
+# --- Testing ---
+coverage/
+.pytest_cache/
+htmlcov/
+locustfile.py
+
+# --- Logs ---
+*.log
+logs/

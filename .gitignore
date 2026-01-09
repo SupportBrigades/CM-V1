@@ -24,3 +24,26 @@ dist-ssr
 
 # Python
 __pycache__/
+*.py[cod]
+*$py.class
+
+# ================================
+# SECURITY: Environment & Secrets
+# ================================
+.env
+.env.*
+*.env
+.env.local
+.env.development
+.env.production
+
+# Python virtual environments  
+venv/
+.venv/
+env/
+ENV/
+.python-version
+
+# Backend specific
+mi_backend_python/.env
+mi_backend_python/__pycache__/
