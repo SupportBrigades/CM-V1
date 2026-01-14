@@ -50,9 +50,12 @@ export const SSTDiagnosis: React.FC = () => {
   };
 
   const handleQuestionnaireComplete = async (data: QuestionnaireData, totalFine: number, infractions: boolean) => {
-    console.log("Estado de companyData al iniciar envío:", companyData);
-    console.log("Multa calculada:", totalFine);
-    console.log("Tiene infracciones:", infractions);
+    // Debug logs solo en desarrollo
+    if (import.meta.env.DEV) {
+      console.log("Estado de companyData al iniciar envío:", companyData);
+      console.log("Multa calculada:", totalFine);
+      console.log("Tiene infracciones:", infractions);
+    }
     setQuestionnaireData(data);
     setCalculatedFine(totalFine);
     setHasInfractions(infractions);
@@ -70,7 +73,9 @@ export const SSTDiagnosis: React.FC = () => {
       respuestas: data
     };
 
-    console.log("Enviando este payload al backend:", payload);
+    if (import.meta.env.DEV) {
+      console.log("Enviando este payload al backend:", payload);
+    }
 
     try {
       const apiUrl = `${import.meta.env.VITE_API_URL}/api/diagnostico`;

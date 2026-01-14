@@ -16,7 +16,7 @@ export interface Phase {
 // MODELO DE RIESGO SUNAFIL - LOSS SALIENCE
 // ============================================
 
-export type RiskLevel = 'Leve' | 'Grave' | 'Muy Grave';
+export type RiskLevel = 'Leves' | 'Grave' | 'Muy Grave';
 
 export interface QuestionRisk {
     riskLevel: RiskLevel;
@@ -24,8 +24,8 @@ export interface QuestionRisk {
     description: string; // Descripción de la infracción
 }
 
-// Valor UIT vigente 2024 (actualizar anualmente)
-export const UIT_VALUE = 5150;
+// Valor UIT vigente 2026 (actualizar anualmente)
+export const UIT_VALUE = 5500;
 
 // Multiplicador por tamaño de empresa según número de trabajadores
 export const getCompanyMultiplier = (numTrabajadores: number): number => {
@@ -37,21 +37,22 @@ export const getCompanyMultiplier = (numTrabajadores: number): number => {
 
 // Multas base por nivel de riesgo (en UITs) según Tabla SUNAFIL
 export const RISK_LEVEL_FINES: Record<RiskLevel, { min: number; max: number }> = {
-    'Leve': { min: 0.20, max: 1.00 },
+    'Leves': { min: 0.20, max: 1.00 },
     'Grave': { min: 2.00, max: 10.00 },
     'Muy Grave': { min: 6.00, max: 25.00 }
 };
 
 // Mapeo de cada pregunta a su nivel de riesgo según normativa SUNAFIL
+// Sincronizado con backend constants.py - Fuente oficial
 export const QUESTION_RISKS: Record<string, QuestionRisk> = {
     // Fase 1: Organización y Política
     q1: { riskLevel: 'Grave', baseUIT: 3.0, description: 'No contar con Política de SST documentada' },
-    q2: { riskLevel: 'Leve', baseUIT: 0.5, description: 'No difundir la política a trabajadores' },
-    q3: { riskLevel: 'Leve', baseUIT: 0.5, description: 'Falta de liderazgo visible de la alta dirección' },
+    q2: { riskLevel: 'Leves', baseUIT: 0.5, description: 'No difundir la política a trabajadores' },
+    q3: { riskLevel: 'Grave', baseUIT: 3.0, description: 'Falta de liderazgo visible de la alta dirección' },
     q4: { riskLevel: 'Grave', baseUIT: 5.0, description: 'No contar con RISST aprobado' },
-    q5: { riskLevel: 'Leve', baseUIT: 0.5, description: 'No entregar RISST a trabajadores' },
-    q6: { riskLevel: 'Muy Grave', baseUIT: 10.0, description: 'No contar con Comité o Supervisor de SST' },
-    q7: { riskLevel: 'Grave', baseUIT: 3.0, description: 'Proceso de elección del CSST no documentado' },
+    q5: { riskLevel: 'Leves', baseUIT: 0.5, description: 'No entregar RISST a trabajadores' },
+    q6: { riskLevel: 'Grave', baseUIT: 5.0, description: 'No contar con Comité o Supervisor de SST' },
+    q7: { riskLevel: 'Leves', baseUIT: 0.5, description: 'Proceso de elección del CSST no documentado' },
     q8: { riskLevel: 'Grave', baseUIT: 4.0, description: 'Miembros del CSST sin capacitación' },
     q9: { riskLevel: 'Grave', baseUIT: 3.0, description: 'CSST sin reuniones mensuales o Libro de Actas' },
     q10: { riskLevel: 'Grave', baseUIT: 4.0, description: 'No realizar estudio de línea base' },
@@ -63,31 +64,31 @@ export const QUESTION_RISKS: Record<string, QuestionRisk> = {
     // Fase 2: Prevención y Control
     q15: { riskLevel: 'Grave', baseUIT: 5.0, description: 'No tener Plan Anual de SST con presupuesto' },
     q16: { riskLevel: 'Grave', baseUIT: 4.0, description: 'No contar con Programa de Capacitaciones' },
-    q17: { riskLevel: 'Muy Grave', baseUIT: 8.0, description: 'No realizar las 4 capacitaciones obligatorias' },
+    q17: { riskLevel: 'Grave', baseUIT: 4.0, description: 'No realizar las 4 capacitaciones obligatorias' },
     q18: { riskLevel: 'Grave', baseUIT: 4.0, description: 'No realizar inducción SST a nuevos trabajadores' },
-    q19: { riskLevel: 'Leve', baseUIT: 1.0, description: 'Capacitaciones sin documentar' },
+    q19: { riskLevel: 'Leves', baseUIT: 1.0, description: 'Capacitaciones sin documentar' },
     q20: { riskLevel: 'Muy Grave', baseUIT: 10.0, description: 'No aplicar controles de jerarquía IPERC' },
-    q21: { riskLevel: 'Muy Grave', baseUIT: 15.0, description: 'No entregar EPP adecuados' },
-    q22: { riskLevel: 'Grave', baseUIT: 3.0, description: 'Sin registro de entrega de EPP' },
+    q21: { riskLevel: 'Grave', baseUIT: 5.0, description: 'No entregar EPP adecuados' },
+    q22: { riskLevel: 'Leves', baseUIT: 0.5, description: 'Sin registro de entrega de EPP' },
     q23: { riskLevel: 'Grave', baseUIT: 4.0, description: 'Sin capacitación en uso de EPP' },
     q24: { riskLevel: 'Muy Grave', baseUIT: 12.0, description: 'Sin PETS para tareas de alto riesgo' },
-    q25: { riskLevel: 'Muy Grave', baseUIT: 10.0, description: 'Sin Plan de Emergencias' },
+    q25: { riskLevel: 'Grave', baseUIT: 5.0, description: 'Sin Plan de Emergencias' },
     q26: { riskLevel: 'Grave', baseUIT: 5.0, description: 'Brigadas sin conformar o capacitar' },
     q27: { riskLevel: 'Grave', baseUIT: 4.0, description: 'Sin simulacros de emergencia' },
 
     // Fase 3: Vigilancia y Mejora
     q28: { riskLevel: 'Muy Grave', baseUIT: 15.0, description: 'Sin Exámenes Médicos Ocupacionales' },
-    q29: { riskLevel: 'Muy Grave', baseUIT: 10.0, description: 'Sin monitoreo de agentes ocupacionales' },
+    q29: { riskLevel: 'Grave', baseUIT: 5.0, description: 'Sin monitoreo de agentes ocupacionales' },
     q30: { riskLevel: 'Grave', baseUIT: 5.0, description: 'Sin verificar cumplimiento de contratas' },
-    q31: { riskLevel: 'Leve', baseUIT: 1.0, description: 'Sin seguimiento a objetivos del Plan' },
-    q32: { riskLevel: 'Muy Grave', baseUIT: 10.0, description: 'Sin procedimiento de investigación de accidentes' },
+    q31: { riskLevel: 'Grave', baseUIT: 4.0, description: 'Sin seguimiento a objetivos del Plan' },
+    q32: { riskLevel: 'Grave', baseUIT: 5.0, description: 'Sin procedimiento de investigación de accidentes' },
     q33: { riskLevel: 'Grave', baseUIT: 6.0, description: 'Sin auditoría obligatoria del SGSST' },
-    q34: { riskLevel: 'Muy Grave', baseUIT: 8.0, description: 'Sin registro de accidentes' },
+    q34: { riskLevel: 'Grave', baseUIT: 5.0, description: 'Sin registro de accidentes' },
     q35: { riskLevel: 'Grave', baseUIT: 5.0, description: 'Sin registro de exámenes médicos' },
     q36: { riskLevel: 'Grave', baseUIT: 4.0, description: 'Sin registro de monitoreo de agentes' },
     q37: { riskLevel: 'Grave', baseUIT: 3.0, description: 'Sin registro de inspecciones internas' },
-    q38: { riskLevel: 'Leve', baseUIT: 2.0, description: 'Sin registro de estadísticas SST' },
-    q39: { riskLevel: 'Grave', baseUIT: 3.0, description: 'Sin registro de equipos de emergencia' },
+    q38: { riskLevel: 'Leves', baseUIT: 2.0, description: 'Sin registro de estadísticas SST' },
+    q39: { riskLevel: 'Leves', baseUIT: 1.0, description: 'Sin registro de equipos de emergencia' },
     q40: { riskLevel: 'Grave', baseUIT: 4.0, description: 'Sin registro de capacitaciones' },
     q41: { riskLevel: 'Grave', baseUIT: 5.0, description: 'Sin registro de auditorías' }
 };
