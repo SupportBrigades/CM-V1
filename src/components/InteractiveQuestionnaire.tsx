@@ -1,10 +1,20 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { CompanyData, QuestionnaireData } from './SSTDiagnosis';
-import { ChevronLeft, Star, HelpCircle, X } from 'lucide-react';
+import { ChevronLeft, Star, HelpCircle, X, Clock } from 'lucide-react';
 import { PhaseCompletionModal } from './PhaseCompletionModal';
 import { RiskExposureWidget } from './RiskExposureWidget';
 import { HeaderRiskWidget } from './HeaderRiskWidget';
 import { useRiskCalculator } from '@/hooks/useRiskCalculator';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import {
   QUESTIONS,
   QUESTION_TOOLTIPS,
@@ -39,6 +49,27 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
   const [phaseHasInfractions, setPhaseHasInfractions] = useState(false);
   const [hasGlobalInfractions, setHasGlobalInfractions] = useState(false);
 
+  // Configuración de tiempos dinámicos por fase
+  // Fase 1 (Preguntas iniciales): tiempos más cortos
+  // Fase 2 (Preguntas técnicas): tiempos medios  
+  // Fase 3 (Preguntas complejas): tiempos más largos
+  const INACTIVITY_CONFIG = {
+    phase1: { idleDelay: 30000, countdown: 35 },  // 30s espera / 35s countdown
+    phase2: { idleDelay: 45000, countdown: 40 },  // 45s espera / 40s countdown
+    phase3: { idleDelay: 60000, countdown: 50 },  // 60s espera / 50s countdown
+    default: { idleDelay: 45000, countdown: 40 }  // Fallback
+  };
+
+  // Estados para el sistema de asistencia por inactividad
+  const [isIdle, setIsIdle] = useState(false);
+  const [idleCountdown, setIdleCountdown] = useState(40);
+  const [idleCycle, setIdleCycle] = useState(0); // Solo 1 ciclo
+  const [showIdleConfirmModal, setShowIdleConfirmModal] = useState(false);
+
+  // Estados para Exit Intent Pop-up (detección de intención de salida)
+  const [showExitIntentModal, setShowExitIntentModal] = useState(false);
+  const [hasExitedOnce, setHasExitedOnce] = useState(false);
+
   // Loss Salience: Track previous risk for animation triggers
   const prevRiskRef = useRef(0);
 
@@ -69,6 +100,23 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
 
   const currentPhase = phaseInfo ? phases[phaseInfo.phaseIndex] : null;
   const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+
+  // Calcular tiempos de inactividad basados en la fase actual
+  const currentInactivityTimes = useMemo(() => {
+    if (!phaseInfo) return INACTIVITY_CONFIG.default;
+
+    const phaseNumber = phaseInfo.phaseIndex + 1; // 1, 2, o 3
+    switch (phaseNumber) {
+      case 1:
+        return INACTIVITY_CONFIG.phase1;
+      case 2:
+        return INACTIVITY_CONFIG.phase2;
+      case 3:
+        return INACTIVITY_CONFIG.phase3;
+      default:
+        return INACTIVITY_CONFIG.default;
+    }
+  }, [phaseInfo, INACTIVITY_CONFIG]);
 
   // Calcular puntos acumulados en tiempo real
   const currentPoints = useMemo(() => {
@@ -183,6 +231,124 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
     }
     setPrevPoints(currentPoints);
   }, [currentPoints, prevPoints]);
+
+  // Función para resetear todos los estados de inactividad
+  const resetInactivityState = useCallback(() => {
+    setIsIdle(false);
+    setIdleCountdown(currentInactivityTimes.countdown);
+    setIdleCycle(0);
+    setShowIdleConfirmModal(false);
+  }, [currentInactivityTimes.countdown]);
+
+  // Efecto para detectar inactividad (5 segundos sin interacción)
+  useEffect(() => {
+    // No activar si hay modales abiertos (incluyendo Exit Intent)
+    if (showPhaseModal || showWelcomeBanner || showIdleConfirmModal || showExitIntentModal) {
+      return;
+    }
+
+    let idleTimer: NodeJS.Timeout;
+
+    const handleActivity = () => {
+      // Resetear el estado de inactividad cuando hay actividad
+      if (isIdle) {
+        resetInactivityState();
+      }
+
+      // Reiniciar el timer de detección de inactividad
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        setIsIdle(true);
+        setIdleCountdown(currentInactivityTimes.countdown); // Usar countdown dinámico
+      }, currentInactivityTimes.idleDelay); // Usar delay dinámico por fase
+    };
+
+    // Configurar listeners de eventos
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('touchstart', handleActivity);
+
+    // Iniciar el timer inicial
+    idleTimer = setTimeout(() => {
+      setIsIdle(true);
+      setIdleCountdown(currentInactivityTimes.countdown);
+    }, currentInactivityTimes.idleDelay);
+
+    return () => {
+      clearTimeout(idleTimer);
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('touchstart', handleActivity);
+    };
+  }, [isIdle, showPhaseModal, showWelcomeBanner, showIdleConfirmModal, showExitIntentModal, resetInactivityState, currentInactivityTimes]);
+
+  // Efecto para el contador regresivo cuando está inactivo
+  useEffect(() => {
+    if (!isIdle || showIdleConfirmModal) return;
+
+    const countdownInterval = setInterval(() => {
+      setIdleCountdown(prev => {
+        if (prev <= 1) {
+          // El contador llegó a 0, mostrar modal de confirmación
+          clearInterval(countdownInterval);
+          setShowIdleConfirmModal(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, [isIdle, idleCycle, showIdleConfirmModal]);
+
+  // Manejadores para el modal de confirmación
+  const handleIdleResume = () => {
+    resetInactivityState();
+  };
+
+  const handleIdleRestart = () => {
+    resetInactivityState();
+    onBack(); // Volver al Step 1
+  };
+
+  // ======================================
+  // EXIT INTENT POP-UP (Detección de intención de salida)
+  // ======================================
+  useEffect(() => {
+    // No activar si ya se mostró una vez en esta sesión
+    if (hasExitedOnce) return;
+
+    // No activar si hay otros modales abiertos
+    if (showPhaseModal || showWelcomeBanner || showIdleConfirmModal || showExitIntentModal) {
+      return;
+    }
+
+    const handleMouseLeave = (e: MouseEvent) => {
+      // Solo activar si el cursor sale por la parte superior del navegador
+      // Umbral de -7 para reducir falsos positivos
+      if (e.clientY < -1 && !hasExitedOnce) {
+        setShowExitIntentModal(true);
+        setHasExitedOnce(true); // Marcar que ya se mostró una vez
+      }
+    };
+
+    document.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [hasExitedOnce, showPhaseModal, showWelcomeBanner, showIdleConfirmModal, showExitIntentModal]);
+
+  // Handler: Continuar con el diagnóstico
+  const handleExitIntentContinue = () => {
+    setShowExitIntentModal(false);
+  };
+
+  // Handler: Abandonar el diagnóstico
+  const handleExitIntentAbandon = () => {
+    setShowExitIntentModal(false);
+    onBack(); // Volver al Step 1 / reiniciar proceso
+  };
 
   if (!currentQuestionId || !currentPhase || !phaseInfo) return null;
 
@@ -505,6 +671,96 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
           </div>
         </div>
       )}
+
+      {/* Widget de Asistencia por Inactividad */}
+      {isIdle && !showIdleConfirmModal && (
+        <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
+          <div className="bg-white rounded-xl shadow-2xl border border-border overflow-hidden min-w-64">
+            {/* Header */}
+            <div className="px-4 py-2 border-b border-border bg-gray-50">
+              <p className="text-xs font-bold text-foreground tracking-widest uppercase">
+                Pausa Detectada
+              </p>
+            </div>
+
+            {/* Contenido */}
+            <div className="px-4 py-3 flex items-center gap-3">
+              <Clock className="w-5 h-5 text-primary shrink-0" />
+              <p className="text-sm text-muted-foreground">
+                Reserva de informe: <span className="font-bold text-foreground tabular-nums">{idleCountdown}s</span>
+              </p>
+            </div>
+
+            {/* Barra de progreso */}
+            <div className="h-1.5 bg-gray-200">
+              <div
+                className="h-full bg-primary inactivity-progress-bar"
+                style={{
+                  width: `${(idleCountdown / currentInactivityTimes.countdown) * 100}%`
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación */}
+      <AlertDialog open={showIdleConfirmModal} onOpenChange={setShowIdleConfirmModal}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader className="text-center sm:text-center">
+            <AlertDialogTitle className="text-xl font-bold text-foreground uppercase tracking-wide">
+              ¿Desea continuar con el blindaje?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-muted-foreground text-sm">
+              La inactividad eliminará el avance de su informe y el cálculo de la multa.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-3 sm:flex-col mt-4">
+            <AlertDialogAction
+              onClick={handleIdleResume}
+              className="w-full sb-button-primary font-bold uppercase tracking-wide py-3"
+            >
+              Mantener Mi Avance
+            </AlertDialogAction>
+            <AlertDialogCancel
+              onClick={handleIdleRestart}
+              className="w-full bg-transparent border-none text-muted-foreground text-xs hover:text-foreground hover:bg-transparent"
+            >
+              Salir y borrar datos
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Exit Intent Pop-up (Detección de intención de salida) */}
+      <AlertDialog open={showExitIntentModal} onOpenChange={setShowExitIntentModal}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader className="text-center sm:text-center">
+            <AlertDialogTitle className="text-xl font-bold text-foreground">
+              ¡Espera, {companyData.nombre || 'Usuario'}! Tu diagnóstico está incompleto
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-muted-foreground text-sm leading-relaxed mt-3">
+              Estás a solo unas pocas respuestas de conocer el riesgo de multa de{' '}
+              <strong className="text-foreground">{companyData.empresa || 'tu empresa'}</strong>.{' '}
+              Si te vas ahora, perderás el progreso realizado y tu informe personalizado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-3 sm:flex-col mt-6">
+            <AlertDialogAction
+              onClick={handleExitIntentContinue}
+              className="w-full sb-button-primary font-bold uppercase tracking-wide py-3"
+            >
+              Continuar mi diagnóstico
+            </AlertDialogAction>
+            <AlertDialogCancel
+              onClick={handleExitIntentAbandon}
+              className="w-full bg-transparent border-none text-muted-foreground text-xs hover:text-foreground hover:bg-transparent"
+            >
+              Abandonar de todos modos
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
