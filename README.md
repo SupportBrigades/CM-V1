@@ -28,7 +28,7 @@ Sigue estos pasos para configurar y ejecutar el proyecto en tu máquina local.
 
 1.  **Navega a la raíz del proyecto:**
     ```sh
-    cd sst-insight-wizard-main
+    cd CM-V9
     ```
 
 2.  **Instala las dependencias:**
@@ -50,7 +50,7 @@ Sigue estos pasos para configurar y ejecutar el proyecto en tu máquina local.
 
 1.  **Navega al directorio del backend:**
     ```sh
-    cd sst-insight-wizard-main/mi_backend_python
+    cd CM-V9/mi_backend_python
     ```
 
 2.  **Crea y activa un entorno virtual (recomendado):**
