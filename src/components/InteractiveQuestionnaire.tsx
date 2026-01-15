@@ -5,6 +5,7 @@ import { PhaseCompletionModal } from './PhaseCompletionModal';
 import { RiskExposureWidget } from './RiskExposureWidget';
 import { HeaderRiskWidget } from './HeaderRiskWidget';
 import { useRiskCalculator } from '@/hooks/useRiskCalculator';
+import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -69,6 +70,51 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
   // Estados para Exit Intent Pop-up (detección de intención de salida)
   const [showExitIntentModal, setShowExitIntentModal] = useState(false);
   const [hasExitedOnce, setHasExitedOnce] = useState(false);
+
+  // Estados para el Tour Guiado (Product Tour)
+  const [runTour, setRunTour] = useState(false);
+  const [hasTourRun, setHasTourRun] = useState(() => {
+    return sessionStorage.getItem('sb_tour_completed') === 'true';
+  });
+
+  // Configuración de pasos del tour
+  const tourSteps: Step[] = [
+    {
+      target: '#tour-progress-bar',
+      content: 'Aquí verás tu avance. El diagnóstico consta de 3 fases críticas para evaluar tu cumplimiento legal. Si respondes "No" a alguna pregunta, aparecerá un indicador de riesgo económico.',
+      placement: 'bottom',
+      disableBeacon: true,
+    },
+    {
+      target: '#tour-help-button',
+      content: 'Si no entiendes alguna normativa, haz clic aquí. Te daremos una explicación técnica y te diremos el riesgo legal exacto.',
+      placement: 'left',
+    },
+    {
+      target: '#tour-points-badge',
+      content: 'Cada respuesta correcta suma puntos. Necesitas acumular puntos para desbloquear y descargar tu informe final de recomendaciones.',
+      placement: 'top',
+    },
+  ];
+
+  // Handler para el callback del tour
+  const handleTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setRunTour(false);
+      sessionStorage.setItem('sb_tour_completed', 'true');
+      setHasTourRun(true);
+    }
+  };
+
+  // Handler para iniciar diagnóstico (dispara el tour)
+  const handleStartDiagnosis = () => {
+    setShowWelcomeBanner(false);
+    if (!hasTourRun) {
+      // Pequeño delay para asegurar que el UI está listo
+      setTimeout(() => setRunTour(true), 500);
+    }
+  };
 
   // Loss Salience: Track previous risk for animation triggers
   const prevRiskRef = useRef(0);
@@ -153,6 +199,23 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
   useEffect(() => {
     prevRiskRef.current = totalRiskExposure;
   }, [totalRiskExposure]);
+
+  // ADVERTENCIA: Mensaje de confirmación al intentar salir/recargar
+  // Se activa siempre que el usuario esté en el cuestionario, excepto cuando el modal de salida está visible
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // No mostrar si el modal de Exit Intent ya está activo
+      if (showExitIntentModal) return;
+
+      e.preventDefault();
+      // Mensaje estándar del navegador (el texto personalizado no se muestra en navegadores modernos)
+      e.returnValue = '¿Estás seguro de que quieres salir? Tu progreso se perderá.';
+      return e.returnValue;
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [showExitIntentModal]);
 
   const handleAnswer = (answer: 'si' | 'no') => {
     if (!currentQuestionId) return;
@@ -354,6 +417,37 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
 
   return (
     <div className="min-h-[100dvh] overflow-x-hidden">
+      {/* Tour Guiado (Product Tour) */}
+      <Joyride
+        steps={tourSteps}
+        run={runTour}
+        continuous
+        showSkipButton
+        disableScrolling
+        callback={handleTourCallback}
+        locale={{
+          back: 'Atrás',
+          close: 'Cerrar',
+          last: 'Finalizar',
+          next: 'Siguiente',
+          skip: 'Saltar tour',
+        }}
+        styles={{
+          options: {
+            primaryColor: '#0056B4',
+            zIndex: 10000,
+          },
+          buttonNext: {
+            backgroundColor: '#0056B4',
+          },
+          buttonBack: {
+            color: '#0056B4',
+          },
+          spotlight: {
+            borderRadius: '12px',
+          },
+        }}
+      />
       {/* Loss Salience: Widget de Riesgo Acumulado */}
       <RiskExposureWidget
         amount={totalRiskExposure}
@@ -364,7 +458,7 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
       {/* Header con progreso - Diseño mejorado */}
       <div className="fixed top-0 left-0 w-full z-40 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
         {/* Barra de progreso animada con gradiente */}
-        <div className="h-1.5 bg-gray-100 overflow-hidden">
+        <div id="tour-progress-bar" className="h-1.5 bg-gray-100 overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
@@ -476,6 +570,7 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
           <div className="sb-question-card text-center p-4 sm:p-6 md:p-8 relative">
             {/* Botón de Ayuda */}
             <button
+              id="tour-help-button"
               onClick={() => setShowTooltip(!showTooltip)}
               className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-all duration-200 hover:scale-110"
               aria-label="Ver explicación"
@@ -555,7 +650,7 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
               )}
 
               {/* Badge de Puntos con Celebración */}
-              <div className="relative group">
+              <div id="tour-points-badge" className="relative group">
                 {/* Partículas de Confeti */}
                 {showConfetti && (
                   <>
@@ -662,7 +757,7 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
 
               {/* Botón */}
               <button
-                onClick={() => setShowWelcomeBanner(false)}
+                onClick={handleStartDiagnosis}
                 className="w-full sb-button-primary text-lg py-3"
               >
                 🚀 Iniciar Diagnóstico

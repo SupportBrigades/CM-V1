@@ -40,7 +40,7 @@ export const HeaderRiskWidget: React.FC<HeaderRiskWidgetProps> = ({
     if (amount === 0) return null;
 
     return (
-        <div className="relative hidden md:flex items-center gap-3">
+        <div className="relative hidden xl:flex items-center gap-3">
             {/* Indicador de incremento - sale desde el borde inferior */}
             {showAddition && lastAddedFine > 0 && (
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 animate-float-down z-50">

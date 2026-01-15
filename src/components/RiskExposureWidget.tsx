@@ -42,8 +42,8 @@ export const RiskExposureWidget: React.FC<RiskExposureWidgetProps> = ({
     if (amount === 0) return null;
 
     return (
-        <div className="risk-widget-mobile">
-            {/* Indicador de incremento - sale desde el borde inferior */}
+        <div id="tour-risk-widget" className="risk-widget-mobile">
+            {/* Indicador de incremento - sale hacia abajo */}
             {showAddition && lastAddedFine > 0 && (
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 animate-float-down">
                     <span className="text-red-600 font-bold text-xs whitespace-nowrap bg-white/95 px-2 py-1 rounded-full shadow-lg border border-red-200">
