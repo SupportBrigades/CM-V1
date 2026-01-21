@@ -204,6 +204,20 @@ export const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
             </h1>
           </motion.div>
 
+          {/* Multa Potencial Display - Added for 320px UX */}
+          {hasInfractions && (
+            <motion.div className="mb-6 relative z-10" variants={itemVariants}>
+              <div className="inline-block px-6 py-4 rounded-2xl bg-red-50 border border-red-100 dark:bg-red-900/20 dark:border-red-800/30 shadow-sm">
+                <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-1">
+                  Riesgo Patrimonial Estimado
+                </p>
+                <p className="text-2xl xs:text-3xl font-extrabold text-red-700 dark:text-red-500 tabular-nums">
+                  {formatMulta(multaPotencial)}
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           {/* Body Content - Conditional message */}
           <motion.div className="mb-6 relative z-10" variants={itemVariants}>
             <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 

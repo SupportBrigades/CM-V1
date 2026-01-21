@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { CompanyData, QuestionnaireData } from './SSTDiagnosis';
+import { CompanyData, QuestionnaireData } from '@/types/sst';
 import { ChevronLeft, Star, HelpCircle, X, Clock } from 'lucide-react';
 import { PhaseCompletionModal } from './PhaseCompletionModal';
 import { RiskExposureWidget } from './RiskExposureWidget';

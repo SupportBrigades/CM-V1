@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CompanyData } from './SSTDiagnosis';
+import { CompanyData } from '@/types/sst';
 import { ChevronRight, Play } from 'lucide-react';
 import TextType from './TextType';
 import { CargoDropdown } from './CargoDropdown';
@@ -160,7 +160,7 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
 
           {/* Contenedor con animación de borde brillante - Solo visible en móviles */}
           <div className="sm:hidden video-glow-border rounded-xl p-[2px]">
-            <div className="sb-card p-3">
+            <div className="sb-card p-4 xs:p-6">
               <div className="text-center mb-4">
                 <h2 className="text-fluid-xl font-bold text-foreground mb-1 leading-tight">
                   Diagnóstico de Cumplimiento SST

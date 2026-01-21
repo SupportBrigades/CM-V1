@@ -19,7 +19,10 @@ class DiagnosticoUser(HttpUser):
                 "q2": "no",
                 "q3": "si",
                 "q4": "no",
-                "q5": "si"
+                "q5": "si",
+                "q6": "no",
+                "q7": "si",
+                "q8": "no"
             }
         }
         with self.client.post("/api/diagnostico", json=payload, catch_response=True) as response:

@@ -107,7 +107,7 @@ def calcular_multa_sunafil(datos_formulario):
             elif numero_trabajadores <= 900: rango = '801-900'
             else: rango = '901-a-mas'
             # Obtener multa unitaria por cada severidad
-            multa_leve = TABLA_MULTAS_GENERAL.loc[rango, 'Leves']
+            multa_leve = TABLA_MULTAS_GENERAL.loc[rango, 'Leve']
             multa_grave = TABLA_MULTAS_GENERAL.loc[rango, 'Grave']
             multa_muy_grave = TABLA_MULTAS_GENERAL.loc[rango, 'Muy Grave']
         

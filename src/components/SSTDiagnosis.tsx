@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { CompanyDataForm } from './CompanyDataForm';
-import { InteractiveQuestionnaire } from './InteractiveQuestionnaire';
-import { ConfirmationPage } from './ConfirmationPage';
+// Lazy load heavy components
+const InteractiveQuestionnaire = lazy(() => import('./InteractiveQuestionnaire').then(module => ({ default: module.InteractiveQuestionnaire })));
+const ConfirmationPage = lazy(() => import('./ConfirmationPage').then(module => ({ default: module.ConfirmationPage })));
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
+import { CompanyData, QuestionnaireData } from '@/types/sst';
 
 // Loader component for the loading overlay
 const Loader = () => (
@@ -12,20 +14,6 @@ const Loader = () => (
     <p className="text-lg font-semibold">Procesando diagnóstico...</p>
   </div>
 );
-
-export interface CompanyData {
-  nombre: string;
-  email: string;
-  telefono: string;
-  empresa: string;
-  cargo: string;
-  numeroTrabajadores: number;
-  tipoEmpresa: 'micro' | 'pequena' | 'no_mype' | '';
-}
-
-export interface QuestionnaireData {
-  [key: string]: 'si' | 'no';
-}
 
 export const SSTDiagnosis: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -127,35 +115,39 @@ export const SSTDiagnosis: React.FC = () => {
         <CompanyDataForm onSubmit={handleCompanyDataSubmit} />
       )}
       {currentStep === 2 && (
-        <div className="w-full px-3 sm:px-4">
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <Terminal className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>
-                {error}
-              </AlertDescription>
-            </Alert>
-          )}
-          <InteractiveQuestionnaire
-            companyData={companyData}
-            onComplete={handleQuestionnaireComplete}
-            onBack={() => setCurrentStep(1)}
-          />
-        </div>
+        <Suspense fallback={<Loader />}>
+          <div className="w-full px-3 sm:px-4">
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+            <InteractiveQuestionnaire
+              companyData={companyData}
+              onComplete={handleQuestionnaireComplete}
+              onBack={() => setCurrentStep(1)}
+            />
+          </div>
+        </Suspense>
       )}
       {currentStep === 3 && (
-        <ConfirmationPage
-          email={companyData.email}
-          empresa={companyData.empresa}
-          nombre={companyData.nombre}
-          cargo={companyData.cargo}
-          numeroTrabajadores={companyData.numeroTrabajadores}
-          tipoEmpresa={companyData.tipoEmpresa}
-          multaPotencial={calculatedFine}
-          hasInfractions={hasInfractions}
-          onRestart={handleRestart}
-        />
+        <Suspense fallback={<Loader />}>
+          <ConfirmationPage
+            email={companyData.email}
+            empresa={companyData.empresa}
+            nombre={companyData.nombre}
+            cargo={companyData.cargo}
+            numeroTrabajadores={companyData.numeroTrabajadores}
+            tipoEmpresa={companyData.tipoEmpresa}
+            multaPotencial={calculatedFine}
+            hasInfractions={hasInfractions}
+            onRestart={handleRestart}
+          />
+        </Suspense>
       )}
     </div>
   );
