@@ -58,10 +58,10 @@ const cargosByCategory: Record<string, string[]> = {
 };
 
 const categoryLabels: Record<string, string> = {
-    'ssoma': 'Seguridad, Salud y Medio Ambiente',
-    'salud': 'Salud Ocupacional y Bienestar',
     'rrhh': 'Recursos Humanos y Legal',
     'gerencia': 'Alta Gerencia y Administración',
+    'ssoma': 'Seguridad, Salud y Medio Ambiente',
+    'salud': 'Salud Ocupacional y Bienestar',
     'operaciones': 'Operaciones, Proyectos y Logística',
     'otros': 'Consultoría y Otros',
 };

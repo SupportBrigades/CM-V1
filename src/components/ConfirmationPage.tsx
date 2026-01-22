@@ -123,9 +123,9 @@ export const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
 
   // WhatsApp URLs - diferentes según contexto
   const whatsappMessageWithInfractions = encodeURIComponent(
-    `Deseo priorizar mi protocolo de *Blindaje Patrimonial de SST*.
+    `Deseo priorizar mi protocolo de *Autodiagnóstico de SST*.
 
-*DATOS DEL DICTAMEN*
+*DATOS DEL INFORME*
 • *Contacto:* ${nombre}
 • *Cargo:* ${cargo}
 • *Empresa:* ${empresa}
@@ -148,7 +148,7 @@ export const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
     {
       icon: <Clock className="w-5 h-5" />,
       title: "Hoja de Ruta de Mitigación",
-      description: "Su consultor coordinará la sesión técnica para revisar sus hallazgos y activar el blindaje patrimonial correspondiente.",
+      description: "Su consultor coordinará la sesión técnica para revisar sus hallazgos y activar el plan de acción correspondiente.",
     },
   ];
 
@@ -186,11 +186,13 @@ export const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
 
           {/* Logo - Support Brigades (Color version) */}
           <motion.div className="mb-8 relative z-10" variants={itemVariants}>
-            <img
-              src="https://www.supportbrigades.com/wp-content/uploads/2021/01/logo-support-brigades-1.png"
-              alt="Support Brigades"
-              className="h-14 sm:h-16 mx-auto"
-            />
+            <a href="https://www.supportbrigades.com" target="_blank" rel="noopener noreferrer">
+              <img
+                src="https://www.supportbrigades.com/wp-content/uploads/2021/01/logo-support-brigades-1.png"
+                alt="Support Brigades"
+                className="h-14 sm:h-16 mx-auto cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </a>
           </motion.div>
 
           {/* Main Header - Conditional based on infractions */}
@@ -199,7 +201,7 @@ export const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
                           text-slate-800 dark:text-slate-100
                           tracking-tight leading-tight uppercase">
               {hasInfractions
-                ? 'Dictamen de Riesgo Patrimonial Generado'
+                ? 'Informe de Riesgo Patrimonial Generado'
                 : '¡Felicitaciones! Cumplimiento Verificado'}
             </h1>
           </motion.div>
@@ -225,7 +227,7 @@ export const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
               {hasInfractions ? (
                 <>
                   El informe con el {' '}
-                  <strong className="text-slate-800 dark:text-slate-100">Diagnóstico de Cumplimiento de SST</strong>{' '}
+                  <strong className="text-slate-800 dark:text-slate-100">Autodiagnóstico de Cumplimiento de SST</strong>{' '}
                   ha sido enviado a:
                 </>
               ) : (
@@ -255,7 +257,7 @@ export const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 
                          leading-relaxed max-w-lg mx-auto mt-4">
               {hasInfractions
-                ? 'Este documento marca el inicio de su protocolo de blindaje legal ante SUNAFIL.'
+                ? 'Este documento marca el inicio de su protocolo de cumplimiento legal ante SUNAFIL.'
                 : 'Su Sistema de Gestión demuestra un alto nivel de madurez. Continúe fortaleciendo su cultura de seguridad.'}
             </p>
           </motion.div>
@@ -270,7 +272,7 @@ export const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
             >
               <h3 className="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100 
                             mb-4 tracking-tight text-left uppercase">
-                Protocolo de Blindaje Activado
+                Protocolo de Cumplimiento Activado
               </h3>
 
               {/* Audit steps */}

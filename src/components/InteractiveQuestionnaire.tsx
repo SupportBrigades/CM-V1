@@ -804,7 +804,7 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader className="text-center sm:text-center">
             <AlertDialogTitle className="text-xl font-bold text-foreground uppercase tracking-wide">
-              ¿Desea continuar con el blindaje?
+              ¿Desea continuar con el autodiagnóstico?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-muted-foreground text-sm">
               La inactividad eliminará el avance de su informe y el cálculo de la multa.

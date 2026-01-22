@@ -126,7 +126,7 @@ export const QUESTIONS: Record<string, string> = {
     q13: '¿Puede demostrar la participación documentada de los trabajadores en la identificación de peligros y riesgos?',
     q14: '¿Su instalación exhibe el Mapa de Riesgos en un lugar visible como exige la normativa?',
 
-    // Fase 2: Blindaje Operativo y Control de Riesgos
+    // Fase 2: Control Operativo y Gestión de Riesgos
     q15: '¿Su Plan Anual de Seguridad y Salud cuenta con presupuesto asignado y aprobado por la dirección?',
     q16: '¿Dispone de un Programa de Capacitaciones planificado que garantice las competencias en seguridad y salud?',
     q17: '¿Puede acreditar el cumplimiento de las 4 capacitaciones mínimas anuales exigidas por ley?',
@@ -253,7 +253,7 @@ export const QUESTION_PHASES: Phase[] = [
     },
     {
         id: 2,
-        name: 'Blindaje Operativo y Control de Riesgos',
+        name: 'Control Operativo y Gestión de Riesgos',
         description: 'Evaluando la efectividad de sus medidas preventivas',
         questionIds: [
             'q15', 'q16', 'q17', 'q18', 'q19', 'q20', 'q21', 'q22',

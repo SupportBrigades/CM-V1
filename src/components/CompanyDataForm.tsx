@@ -163,7 +163,7 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
             <div className="sb-card p-4 xs:p-6">
               <div className="text-center mb-4">
                 <h2 className="text-fluid-xl font-bold text-foreground mb-1 leading-tight">
-                  Diagnóstico de Cumplimiento SST
+                  Autodiagnóstico de Cumplimiento SST
                 </h2>
                 <p className="text-muted-foreground text-fluid-xs italic">
                   Completa tus datos para iniciar la evaluación
@@ -177,7 +177,7 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
                   {errors.nombre && (<p className="text-destructive text-sm mt-1">{errors.nombre}</p>)}
                 </div>
                 <div>
-                  <label htmlFor="empresa-mobile" className="block text-fluid-xs font-medium text-foreground mb-1">Razón Social *</label>
+                  <label htmlFor="empresa-mobile" className="block text-fluid-xs font-medium text-foreground mb-1">Empresa *</label>
                   <input type="text" id="empresa-mobile" value={formData.empresa} onChange={(e) => handleInputChange('empresa', e.target.value)} className="w-full input-fluid border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background" placeholder="Nombre de tu empresa" />
                   {errors.empresa && (<p className="text-destructive text-sm mt-1">{errors.empresa}</p>)}
                 </div>
@@ -272,7 +272,7 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
           <div className="hidden sm:block sb-card p-3 sm:p-5 md:p-8 lg:p-10">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <h2 className="text-fluid-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-1 sm:mb-2 leading-tight">
-                Diagnóstico de Cumplimiento SST
+                Autodiagnóstico de Cumplimiento SST
               </h2>
               <p className="text-muted-foreground text-fluid-xs md:text-base italic">
                 Completa tus datos para iniciar la evaluación
@@ -286,7 +286,7 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
                 {errors.nombre && (<p className="text-destructive text-sm mt-1">{errors.nombre}</p>)}
               </div>
               <div>
-                <label htmlFor="empresa" className="block text-fluid-xs font-medium text-foreground mb-1 sm:mb-2">Razón Social *</label>
+                <label htmlFor="empresa" className="block text-fluid-xs font-medium text-foreground mb-1 sm:mb-2">Empresa *</label>
                 <input type="text" id="empresa" value={formData.empresa} onChange={(e) => handleInputChange('empresa', e.target.value)} className="w-full input-fluid border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background" placeholder="Nombre de tu empresa" />
                 {errors.empresa && (<p className="text-destructive text-sm mt-1">{errors.empresa}</p>)}
               </div>
