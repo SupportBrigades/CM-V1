@@ -3,7 +3,9 @@ nixPkgs = ["python311", "nodejs-18_x"]
 
 [phases.install]
 cmds = [
-    "python3 -m venv /opt/venv && . /opt/venv/bin/activate && pip install -r mi_backend_python/requirements.txt",
+    "python3 -m venv /opt/venv",
+    ". /opt/venv/bin/activate && pip install --upgrade pip",
+    ". /opt/venv/bin/activate && pip install -r mi_backend_python/requirements.txt",
     "npm install"
 ]
 
