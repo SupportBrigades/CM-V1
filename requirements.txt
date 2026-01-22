@@ -1,1 +1,9 @@
-# Dummy file to trigger Python detection in Nixpacks
+fastapi
+pydantic
+python-dotenv
+httpx
+pandas
+uvicorn
+python-multipart
+gunicorn
+
