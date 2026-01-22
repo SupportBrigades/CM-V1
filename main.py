@@ -157,7 +157,7 @@ app = FastAPI(lifespan=lifespan)
 # Configuración dinámica: lee ALLOWED_ORIGINS del entorno (separado por comas)
 ALLOWED_ORIGINS = os.environ.get(
     "ALLOWED_ORIGINS", 
-    "http://localhost:5173,http://localhost:8080,http://localhost:8081,https://calculadora.supportbrigades.com"
+    "http://localhost:5173,http://localhost:8080,http://localhost:8081,https://calculadora.supportbrigades.com,https://multas.supportbrigades.com"
 )
 origins = [origin.strip() for origin in ALLOWED_ORIGINS.split(",")]
 logging.info(f"🔒 CORS configurado para: {origins}")
