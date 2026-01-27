@@ -345,3 +345,17 @@ async def get_dashboard_data(start_date: str, end_date: str, username: str = Dep
         "daily_traffic": daily_traffic,
         "generated_at": datetime.now().isoformat()
     }
+
+@router.post("/reset", status_code=200)
+async def reset_database(username: str = Depends(get_current_username)):
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM sessions")
+        cursor.execute("DELETE FROM events")
+        cursor.execute("DELETE FROM system_logs")
+        conn.commit()
+        return {"message": "Base de datos reseteada correctamente. Datos eliminados."}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al resetear DB: {str(e)}")
