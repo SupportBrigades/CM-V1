@@ -226,49 +226,122 @@ async def get_channels(start_date: str, end_date: str, username: str = Depends(g
         })
     
     return {"channels": channels, "total_sessions": total_sessions}
-
-@router.get("/logs", response_model=List[SystemLog])
-async def get_logs(limit: int = 50, level: Optional[str] = None, username: str = Depends(get_current_username)):
+# --- DASHBOARD ENDPOINT ---
+@router.get("/dashboard", response_model=dict)
+async def get_dashboard_data(start_date: str, end_date: str, username: str = Depends(get_current_username)):
     conn = get_db()
     cursor = conn.cursor()
     
-    query = "SELECT rowid as id, timestamp, level, message, module, traceback FROM system_logs"
-    params = []
+    # Filtros
+    date_filter = f"created_at BETWEEN '{start_date}T00:00:00' AND '{end_date}T23:59:59'"
     
-    if level:
-        query += " WHERE level = ?"
-        params.append(level)
+    # 1. KPIs (Reutilizando lógica)
+    cursor.execute(f"SELECT COUNT(*) FROM sessions WHERE {date_filter}")
+    total_leads = cursor.fetchone()[0]
+    
+    cursor.execute(f"SELECT COUNT(*) FROM sessions WHERE {date_filter} AND is_converted = 1")
+    total_conversions = cursor.fetchone()[0]
+    
+    conversion_rate = round((total_conversions / total_leads * 100), 2) if total_leads > 0 else 0
+    abandonment_rate = round(100 - conversion_rate, 2)
+    
+    cursor.execute(f"SELECT AVG(conversion_amount) FROM sessions WHERE {date_filter} AND is_converted = 1")
+    avg_multa = cursor.fetchone()[0] or 0
+    
+    five_min_ago = (datetime.now() - timedelta(minutes=5)).isoformat()
+    cursor.execute(f"SELECT COUNT(*) FROM sessions WHERE last_activity > '{five_min_ago}'")
+    active_users = cursor.fetchone()[0]
+    
+    kpis = {
+        "total_leads": total_leads,
+        "conversion_rate": conversion_rate,
+        "avg_penalty_amount": float(avg_multa),
+        "active_users": active_users,
+        "abandonment_rate": abandonment_rate,
+        "total_conversions": total_conversions
+    }
+    
+    # 2. Funnel (Aproximación por eventos)
+    # Definir pasos: form_start -> form_submit -> questionnaire_start -> confirmation_page_viewed
+    steps = ["form_start", "form_submit", "questionnaire_start", "confirmation_page_viewed"]
+    funnel_counts = {}
+    
+    for step in steps:
+        cursor.execute(f"""
+            SELECT COUNT(DISTINCT session_id) 
+            FROM events 
+            WHERE event_type = '{step}' AND {date_filter}
+        """)
+        funnel_counts[step] = cursor.fetchone()[0]
+    
+    # Asegurar orden lógico (descendente) para visualización
+    funnel_data = {
+        "form_starts": funnel_counts.get("form_start", 0),
+        "form_submits": funnel_counts.get("form_submit", 0),
+        "questionnaire_starts": funnel_counts.get("questionnaire_start", 0),
+        "confirmations": funnel_counts.get("confirmation_page_viewed", 0)
+    }
+    
+    detailed_funnel = [
+        {"step": "Formulario Iniciado", "count": funnel_counts["form_start"], "color": "#3B82F6"},
+        {"step": "Formulario Enviado", "count": funnel_counts["form_submit"], "color": "#10B981"},
+        {"step": "Cuestionario Iniciado", "count": funnel_counts["questionnaire_start"], "color": "#F59E0B"},
+        {"step": "Confirmación Vista", "count": funnel_counts["confirmation_page_viewed"], "color": "#6366F1"},
+    ]
+    
+    # 3. Daily Traffic (Últimos N días en el rango)
+    # Agrupar por fecha (substr created_at, 0, 10)
+    cursor.execute(f"""
+        SELECT substr(created_at, 1, 10) as day, 
+               COUNT(*) as visits,
+               SUM(CASE WHEN is_converted = 1 THEN 1 ELSE 0 END) as completions,
+               SUM(CASE WHEN is_converted = 1 THEN conversion_amount ELSE 0 END) as amount
+        FROM sessions
+        WHERE {date_filter}
+        GROUP BY day
+        ORDER BY day ASC
+    """)
+    traffic_rows = cursor.fetchall()
+    daily_traffic = [
+        {"date": r["day"], "visits": r["visits"], "completions": r["completions"], "total_amount": r["amount"]}
+        for r in traffic_rows
+    ]
+    
+    # 4. Preguntas (Dropoff)
+    # Buscar eventos question_viewed_X y question_answered_X
+    # Asumimos IDs q1..q20
+    question_stats = {}
+    for i in range(1, 21):
+        qid = f"q{i}"
+        cursor.execute(f"SELECT COUNT(*) FROM events WHERE event_type = 'question_viewed_{qid}' AND {date_filter}")
+        viewed = cursor.fetchone()[0]
         
-    query += " ORDER BY timestamp DESC LIMIT ?"
-    params.append(limit)
-    
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
-    
-    return [dict(r) for r in rows]
+        cursor.execute(f"SELECT COUNT(*) FROM events WHERE event_type = 'question_answered_{qid}' AND {date_filter}")
+        answered = cursor.fetchone()[0]
+        
+        if viewed > 0:
+            dropoff = round(((viewed - answered) / viewed) * 100, 1)
+            question_stats[qid] = {"viewed": viewed, "answered": answered, "dropoff_rate": dropoff}
+            
+    # Killer question (la de mayor dropoff)
+    killer_q = None
+    if question_stats:
+        worst_qid = max(question_stats, key=lambda k: question_stats[k]['dropoff_rate'])
+        stats = question_stats[worst_qid]
+        killer_q = {
+            "question_id": worst_qid,
+            "dropoff_rate": stats['dropoff_rate'],
+            "viewed": stats['viewed'],
+            "abandoned": stats['viewed'] - stats['answered']
+        }
 
-@router.get("/health", response_model=HealthStatus)
-async def get_analytics_health(username: str = Depends(get_current_username)):
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    # Errores ultimas 24h
-    one_day_ago = (datetime.now() - timedelta(days=1)).isoformat()
-    cursor.execute(f"SELECT COUNT(*) FROM system_logs WHERE timestamp > '{one_day_ago}' AND level IN ('ERROR', 'CRITICAL')")
-    errors_24h = cursor.fetchone()[0]
-    
-    # Sesiones hoy
-    today = datetime.now().strftime("%Y-%m-%d")
-    cursor.execute(f"SELECT COUNT(*) FROM sessions WHERE created_at LIKE '{today}%'")
-    sessions_today = cursor.fetchone()[0]
-    
-    status_health = "healthy"
-    if errors_24h > 10: status_health = "critical"
-    elif errors_24h > 0: status_health = "warning"
-    
     return {
-        "status": status_health,
-        "errors_24h": errors_24h,
-        "sessions_today": sessions_today,
-        "timestamp": datetime.now().isoformat()
+        "kpis": kpis,
+        "funnel": funnel_data,
+        "detailed_funnel": detailed_funnel,
+        "killer_question": killer_q,
+        "question_dropoff": question_stats,
+        "step_dropoff": {}, # Placeholder
+        "daily_traffic": daily_traffic,
+        "generated_at": datetime.now().isoformat()
     }
