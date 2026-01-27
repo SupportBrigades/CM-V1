@@ -290,9 +290,9 @@ export default function Dashboard() {
             // Construir query params de fecha
             const dateParams = `start_date=${startDate}&end_date=${endDate}`;
 
-            // Fetch KPIs, Geo, Devices, Channels, Logs y Health en paralelo
-            const [kpisResponse, geoResponse, devicesResponse, channelsResponse, logsResponse, criticalLogsResponse, healthResponse] = await Promise.all([
-                fetch(`${API_URL}/api/analytics/kpis?${dateParams}`, { headers }),
+            // Fetch Dashboard Completo (Unificado)
+            const [dashboardResponse, geoResponse, devicesResponse, channelsResponse, logsResponse, criticalLogsResponse, healthResponse] = await Promise.all([
+                fetch(`${API_URL}/api/analytics/dashboard?${dateParams}`, { headers }),
                 fetch(`${API_URL}/api/analytics/geo?${dateParams}`, { headers }).catch(() => null),
                 fetch(`${API_URL}/api/analytics/devices?${dateParams}`, { headers }).catch(() => null),
                 fetch(`${API_URL}/api/analytics/channels?${dateParams}`, { headers }).catch(() => null),
@@ -301,11 +301,12 @@ export default function Dashboard() {
                 fetch(`${API_URL}/api/analytics/health`, { headers }).catch(() => null)
             ]);
 
-            if (kpisResponse.status === 401) throw new Error('Acceso no autorizado');
-            if (!kpisResponse.ok) throw new Error('Error al cargar datos');
+            if (dashboardResponse.status === 401) throw new Error('Acceso no autorizado');
+            if (!dashboardResponse.ok) throw new Error('Error al cargar datos del dashboard');
 
-            const kpisJson = await kpisResponse.json();
-            setData(kpisJson);
+            const dashboardJson = await dashboardResponse.json();
+            // Asignar respuesta completa (KPIs + Funnel + Traffic)
+            setData(dashboardJson);
 
             if (geoResponse && geoResponse.ok) {
                 const geoJson = await geoResponse.json();

@@ -6,6 +6,14 @@ const HEARTBEAT_INTERVAL = 60000; // 60 segundos
 // Clave para almacenar session_id en sessionStorage
 const SESSION_STORAGE_KEY = 'analytics_session_id';
 
+// Declaración global para Clarity y GTM
+declare global {
+  interface Window {
+    clarity: (command: string, ...args: any[]) => void;
+    dataLayer: any[];
+  }
+}
+
 /**
  * Hook para tracking de analytics.
  * Gestiona sesiones, eventos y heartbeats.
@@ -39,6 +47,12 @@ export function useAnalytics() {
         const data = await response.json();
         sessionStorage.setItem(SESSION_STORAGE_KEY, data.session_id);
         sessionIdRef.current = data.session_id;
+
+        // Identificar sesión en Clarity (opcional, pero útil)
+        if (window.clarity) {
+          window.clarity("set", "session_id", data.session_id);
+        }
+
         if (import.meta.env.DEV) {
           console.log('📊 Analytics session created:', data.session_id.slice(0, 8) + '...');
         }
@@ -56,15 +70,42 @@ export function useAnalytics() {
    * Envía un evento de tracking.
    */
   const trackEvent = useCallback(async (
-    eventType: string, 
+    eventType: string,
     eventData?: Record<string, unknown>
   ): Promise<void> => {
     let sessionId = sessionIdRef.current || sessionStorage.getItem(SESSION_STORAGE_KEY);
-    
+
     // Si no hay sesión, intentar crearla
     if (!sessionId) {
       sessionId = await getSessionId();
     }
+
+    // ---------------------------------------------------------
+    // INTEGRACIÓN MICROSOFT CLARITY (SMART EVENTS)
+    // ---------------------------------------------------------
+    if (window.clarity) {
+      // Enviamos el evento a Clarity para que aparezca en "Smart Events"
+      // Nota: Clarity recomienda nombres simples.
+      window.clarity("event", eventType);
+
+      if (import.meta.env.DEV) {
+        console.log(`🎥 Enaviado a Clarity: ${eventType}`);
+      }
+    }
+
+    // ---------------------------------------------------------
+    // INTEGRACIÓN GOOGLE TAG MANAGER (DATA LAYER)
+    // ---------------------------------------------------------
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        'event': eventType,
+        ...eventData
+      });
+      if (import.meta.env.DEV) {
+        console.log(`📊 GTM DataLayer Push: ${eventType}`, eventData);
+      }
+    }
+    // ---------------------------------------------------------
 
     if (!sessionId) {
       if (import.meta.env.DEV) {
@@ -120,7 +161,7 @@ export function useAnalytics() {
    */
   const startHeartbeat = useCallback(() => {
     if (heartbeatIntervalRef.current) return;
-    
+
     heartbeatIntervalRef.current = window.setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
     if (import.meta.env.DEV) {
       console.log('📊 Heartbeat started');

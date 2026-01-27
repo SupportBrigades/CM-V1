@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { CompanyData } from '@/types/sst';
 import { ChevronRight, Play } from 'lucide-react';
 import TextType from './TextType';
@@ -24,6 +25,13 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
     numeroTrabajadores: 0,
     tipoEmpresa: '',
   });
+
+  const { trackEvent } = useAnalytics();
+
+  // Track form initialization
+  useEffect(() => {
+    trackEvent('form_start');
+  }, []); // Only once on mount
 
   const [errors, setErrors] = useState<{ [K in keyof CompanyData]?: string }>({});
   const [videoPlaying, setVideoPlaying] = useState(false);
@@ -52,6 +60,7 @@ export const CompanyDataForm: React.FC<CompanyDataFormProps> = ({ onSubmit }) =>
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
+      trackEvent('form_submit');
       onSubmit(formData);
     }
   };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { CompanyData, QuestionnaireData } from '@/types/sst';
 import { ChevronLeft, Star, HelpCircle, X, Clock } from 'lucide-react';
 import { PhaseCompletionModal } from './PhaseCompletionModal';
@@ -49,6 +50,13 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(true);
   const [phaseHasInfractions, setPhaseHasInfractions] = useState(false);
   const [hasGlobalInfractions, setHasGlobalInfractions] = useState(false);
+
+  const { trackEvent } = useAnalytics();
+
+  // Track inicio de cuestionario
+  useEffect(() => {
+    trackEvent('questionnaire_start');
+  }, []);
 
   // Configuración de tiempos dinámicos por fase
   // Fase 1 (Preguntas iniciales): tiempos más cortos
@@ -144,6 +152,13 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
     [currentQuestionId, companyData.tipoEmpresa]
   );
 
+  // Track pregunta vista
+  useEffect(() => {
+    if (currentQuestionId) {
+      trackEvent(`question_viewed_${currentQuestionId}`);
+    }
+  }, [currentQuestionId]);
+
   const currentPhase = phaseInfo ? phases[phaseInfo.phaseIndex] : null;
   const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
 
@@ -221,6 +236,7 @@ export const InteractiveQuestionnaire: React.FC<InteractiveQuestionnaireProps> =
     if (!currentQuestionId) return;
 
     setIsAnimating(true);
+    trackEvent(`question_answered_${currentQuestionId}`, { answer });
     const newAnswers = { ...answers, [currentQuestionId]: answer };
     setAnswers(newAnswers);
 

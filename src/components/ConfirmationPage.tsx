@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { motion } from 'framer-motion';
 import { UserCheck, Clock, CheckCircle, MessageCircle } from 'lucide-react';
 
@@ -101,6 +102,16 @@ export const ConfirmationPage: React.FC<ConfirmationPageProps> = ({
   multaPotencial,
   hasInfractions
 }) => {
+  const { trackEvent } = useAnalytics();
+
+  useEffect(() => {
+    trackEvent('confirmation_page_viewed', {
+      amount: multaPotencial,
+      currency: 'PEN',
+      has_infractions: hasInfractions
+    });
+  }, []);
+
   // Helper para formatear tipo de empresa
   const formatTipoEmpresa = (tipo: string) => {
     switch (tipo) {
