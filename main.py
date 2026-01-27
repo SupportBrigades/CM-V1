@@ -170,6 +170,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- INTEGRACIÓN ANALYTICS (DASHBOARD) ---
+from analytics import router as analytics_router
+app.include_router(analytics_router)
+
+# Verificar/Crear DB de analytics si no existe (para persistencia básica en Railway)
+import os, shutil
+if not os.path.exists("analytics.db"):
+    # Intentar copiar desde mi_backend_python si existe
+    if os.path.exists("mi_backend_python/analytics.db"):
+        shutil.copy("mi_backend_python/analytics.db", "analytics.db")
+        logging.info("✅ DB Analytics restaurada desde backup local")
+    else:
+        # Si no, crear datos de prueba (importando el script)
+        try:
+            from mi_backend_python.seed_sample_data import main as seed_db
+            seed_db()
+            logging.info("✅ DB Analytics creada con datos de prueba")
+        except ImportError:
+            logging.warning("⚠️ No se pudo inicializar analytics.db (script no encontrado)")
+
 class DatosFormulario(BaseModel):
     """Modelo de datos del formulario SST con protección contra inyección de campos."""
     model_config = {"extra": "forbid"}
