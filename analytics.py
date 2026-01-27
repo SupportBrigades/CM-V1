@@ -1,9 +1,10 @@
 import os
 import sqlite3
 import secrets
+import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 
@@ -345,6 +346,117 @@ async def get_dashboard_data(start_date: str, end_date: str, username: str = Dep
         "daily_traffic": daily_traffic,
         "generated_at": datetime.now().isoformat()
     }
+
+
+# --- MODELOS DE INPUT PARA TRACKING ---
+class SessionInput(BaseModel):
+    device_info: str = "unknown"
+    referrer: Optional[str] = None
+    utm_source: Optional[str] = "direct"
+
+class EventInput(BaseModel):
+    session_id: str
+    event_type: str
+    event_data: Optional[str] = None
+
+class HeartbeatInput(BaseModel):
+    session_id: str
+
+# --- ENDPOINTS DE TRACKING (PÚBLICOS - SIN AUTH BÁSICA) ---
+# Estos endpoints son llamados por el frontend del usuario, no requieren usuario/pass del dashboard
+
+@router.post("/session", status_code=201)
+async def create_session(data: SessionInput, request: Request):
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    session_id = str(uuid.uuid4())
+    created_at = datetime.now().isoformat()
+    
+    # Intentar inferir GeoIP (Simulado o headers)
+    # En producción real usaríamos una DB de GeoIP o servicio externo
+    # Por ahora, extraemos de headers si existen (Cloudflare, etc.)
+    country_code = request.headers.get("CF-IPCountry", None) 
+    country = "Unknown"
+    
+    user_agent = request.headers.get("User-Agent", "Unknown")
+    
+    # Detectar device type simple
+    device_type = "desktop"
+    ua_lower = user_agent.lower()
+    if "mobile" in ua_lower: device_type = "mobile"
+    elif "tablet" in ua_lower or "ipad" in ua_lower: device_type = "tablet"
+    
+    cursor.execute('''
+        INSERT INTO sessions 
+        (session_id, created_at, device_info, user_agent, is_converted, 
+         conversion_amount, last_activity, country, country_code, 
+         device_type, utm_source)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        session_id,
+        created_at,
+        data.device_info,
+        user_agent,
+        0, # Not converted yet
+        0,
+        created_at, # Last activity = now
+        country,
+        country_code,
+        device_type,
+        data.utm_source
+    ))
+    
+    conn.commit()
+    
+    # Registrar evento inicial
+    cursor.execute('INSERT INTO events (session_id, event_type, created_at) VALUES (?, ?, ?)',
+                   (session_id, 'session_start', created_at))
+    conn.commit()
+    
+    return {"session_id": session_id}
+
+@router.post("/event", status_code=201)
+async def track_event(data: EventInput):
+    conn = get_db()
+    cursor = conn.cursor()
+    created_at = datetime.now().isoformat()
+    
+    cursor.execute('''
+        INSERT INTO events (session_id, event_type, event_data, created_at)
+        VALUES (?, ?, ?, ?)
+    ''', (data.session_id, data.event_type, data.event_data, created_at))
+    
+    # Actualizar last_activity
+    cursor.execute("UPDATE sessions SET last_activity = ? WHERE session_id = ?", (created_at, data.session_id))
+    
+    # Lógica de Conversión
+    if data.event_type == "confirmation_page_viewed":
+        # Marcar como convertido
+        amount = 0
+        if data.event_data:
+            try:
+                import json
+                event_json = json.loads(data.event_data)
+                amount = float(event_json.get("amount", 0))
+            except:
+                pass
+        
+        cursor.execute("UPDATE sessions SET is_converted = 1, conversion_amount = ? WHERE session_id = ?", 
+                       (amount, data.session_id))
+    
+    conn.commit()
+    return {"status": "ok"}
+
+@router.post("/heartbeat", status_code=200)
+async def heartbeat(data: HeartbeatInput):
+    conn = get_db()
+    cursor = conn.cursor()
+    now = datetime.now().isoformat()
+    
+    cursor.execute("UPDATE sessions SET last_activity = ? WHERE session_id = ?", (now, data.session_id))
+    conn.commit()
+    return {"status": "alive"}
 
 @router.post("/reset", status_code=200)
 async def reset_database(username: str = Depends(get_current_username)):
